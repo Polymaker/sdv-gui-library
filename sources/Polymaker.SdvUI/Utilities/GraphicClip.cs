@@ -12,16 +12,23 @@ namespace Polymaker.SdvUI.Utilities
     {
         private Rectangle OriginalClipRect;
         private SpriteBatch SB;
+        private bool EndDraw;
 
         public GraphicClip(SpriteBatch b, Rectangle clipRect)
         {
             OriginalClipRect = b.GraphicsDevice.ScissorRectangle;
             SB = b;
-            b.End();
-            b.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, new RasterizerState
+
+            if(b.GraphicsDevice.RasterizerState == null || !b.GraphicsDevice.RasterizerState.ScissorTestEnable)
             {
-                ScissorTestEnable = true
-            });
+                b.End();
+                b.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, new RasterizerState
+                {
+                    ScissorTestEnable = true
+                });
+                EndDraw = true;
+            }
+            
             var fixedRect = clipRect;
 
             fixedRect.X = Math.Max(clipRect.X, 0);
@@ -36,8 +43,11 @@ namespace Polymaker.SdvUI.Utilities
         public void Dispose()
         {
             SB.GraphicsDevice.ScissorRectangle = OriginalClipRect;
-            SB.End();
-            SB.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
+            if (EndDraw)
+            {
+                SB.End();
+                SB.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
+            }
         }
     }
 }

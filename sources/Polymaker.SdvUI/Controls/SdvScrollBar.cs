@@ -14,6 +14,7 @@ namespace Polymaker.SdvUI.Controls
         private int _LargeChange;
         private int _SmallChange;
         private int _Value;
+        private bool IsContainerScrollBar;
 
         private Rectangle UpArrowBounds;
         private Rectangle DownArrowBounds;
@@ -69,6 +70,20 @@ namespace Polymaker.SdvUI.Controls
                 Width = SCROLLBAR_SIZE;
         }
 
+        public SdvScrollBar(Orientation orientation, bool fromContainer)
+        {
+            Orientation = orientation;
+            _MaxValue = 1;
+            _SmallChange = 8;
+            _LargeChange = 32;
+            IsContainerScrollBar = fromContainer;
+
+            if (Orientation == Orientation.Horizontal)
+                Height = SCROLLBAR_SIZE;
+            else
+                Width = SCROLLBAR_SIZE;
+        }
+
         protected void OnScroll(EventArgs e)
         {
             Scroll?.Invoke(this, e);
@@ -86,6 +101,22 @@ namespace Polymaker.SdvUI.Controls
             }
 
             base.SetBoundsCore(x, y, width, height, specifiedBounds);
+        }
+
+        public override Rectangle GetDisplayRectangle()
+        {
+            if (!IsContainerScrollBar)
+                return base.GetDisplayRectangle();
+
+            if (Parent != null)
+            {
+                var parentBounds = Parent.GetDisplayRectangle();
+                return new Rectangle(
+                    parentBounds.X + X,
+                    parentBounds.Y + Y,
+                    Width, Height);
+            }
+            return Bounds;
         }
 
         //protected override void OnSizeChanged(EventArgs e)
@@ -144,6 +175,21 @@ namespace Polymaker.SdvUI.Controls
                 b.DrawImageRotated(SdvImages.UpArrow, UpArrowBounds, -3.14f / 2f, Color.White, 4f);
                 b.DrawImageRotated(SdvImages.DownArrow, DownArrowBounds, -3.14f / 2f, Color.White, 4f);
                 b.DrawImage(SdvImages.HScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
+            }
+        }
+
+        protected internal override void OnLeftClick(Point pos)
+        {
+            var displayPt = PointToDisplay(pos);
+            if (UpArrowBounds.Contains(displayPt))
+            {
+                if (Value > 0)
+                    Value -= _SmallChange;
+            }
+            else if (DownArrowBounds.Contains(displayPt))
+            {
+                if (Value < MaxValue)
+                    Value += _SmallChange;
             }
         }
     }

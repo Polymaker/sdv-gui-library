@@ -11,7 +11,7 @@ namespace Polymaker.SdvUI.Controls
 {
     public class SdvContainer : SdvControl, ISdvContainer
     {
-        private Point _ScrollOffset;
+        //private Point _ScrollOffset;
 
         public Point ScrollSize { get; private set; }
         
@@ -19,12 +19,16 @@ namespace Polymaker.SdvUI.Controls
 
         public Point ScrollOffset
         {
-            get => _ScrollOffset;
+            get => new Point(HScrollBarVisible ? HScrollBar.Value * -1 : 0, VScrollBarVisible ? VScrollBar.Value * -1 : 0);
             set
             {
-                if (value != _ScrollOffset)
+                if (value != ScrollOffset)
                 {
-                    _ScrollOffset = value;
+                    if (HScrollBarVisible)
+                        HScrollBar.Value = value.X;
+                    if (VScrollBarVisible)
+                        VScrollBar.Value = value.Y;
+                    //_ScrollOffset = value;
                 }
             }
         }
@@ -41,13 +45,24 @@ namespace Polymaker.SdvUI.Controls
             Controls = new SdvControlCollection(this);
             ScrollSize = Point.Zero;
 
-            HScrollBar = new SdvScrollBar(Orientation.Horizontal);
-            HScrollBar.SetParent(this, false);
-            VScrollBar = new SdvScrollBar(Orientation.Vertical);
-            VScrollBar.SetParent(this, false);
-
+            HScrollBar = new SdvScrollBar(Orientation.Horizontal, true);
+            HScrollBar.SetParent(this, true);
+            //HScrollBar.Scroll += HScrollBar_Scroll;
+            VScrollBar = new SdvScrollBar(Orientation.Vertical, true);
+            VScrollBar.SetParent(this, true);
+            //VScrollBar.Scroll += VScrollBar_Scroll;
             Controls.ControlAdded += Controls_ControlAdded;
             Controls.ControlRemoved += Controls_ControlRemoved;
+        }
+
+        private void VScrollBar_Scroll(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void HScrollBar_Scroll(object sender, EventArgs e)
+        {
+            
         }
 
         private void Controls_ControlAdded(object sender, ControlsChangedEventArgs e)
@@ -101,6 +116,12 @@ namespace Polymaker.SdvUI.Controls
             {
                 newSize.X = Math.Max(ctrl.Bounds.Right, newSize.X);
                 newSize.Y = Math.Max(ctrl.Bounds.Bottom, newSize.Y);
+            }
+
+            if(newSize.X > 0 || newSize.Y > 0)
+            {
+                newSize.X += Padding.Horizontal;
+                newSize.Y += Padding.Vertical;
             }
 
             if (newSize != ScrollSize)
@@ -173,6 +194,26 @@ namespace Polymaker.SdvUI.Controls
             //foreach (var control in Controls)
             //    if (control is ISdvContainer)
             //        control.PerformDraw(b);
+        }
+
+        protected internal override void OnLeftClick(Point pos)
+        {
+            var allControls = Controls.ToList();
+            if (HScrollBarVisible)
+                allControls.Add(HScrollBar);
+            if (VScrollBarVisible)
+                allControls.Add(VScrollBar);
+
+            foreach (var ctrl in allControls)
+            {
+                if(ctrl.Bounds.Contains(pos))
+                {
+                    var localPt = new Point(pos.X - ctrl.X, pos.Y - ctrl.Y);
+                    ctrl.OnLeftClick(localPt);
+                    return;
+                }
+            }
+            base.OnLeftClick(pos);
         }
     }
 }

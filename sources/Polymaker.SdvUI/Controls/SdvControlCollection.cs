@@ -42,8 +42,8 @@ namespace Polymaker.SdvUI.Controls
         {
             if (ValidateCanAdd(item))
             {
-                item.SetParent(Owner);
                 Controls.Add(item);
+                item.SetParent(Owner, true);
                 TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Add);
             }
         }
@@ -54,7 +54,7 @@ namespace Polymaker.SdvUI.Controls
             {
                 Controls.ForEach(c =>
                 {
-                    c.SetParent(null);
+                    c.SetParent(null, true);
                     TriggerCollectionChanged(c, ControlsChangedEventArgs.Action.Remove);
                 });
                 Controls.Clear();
@@ -85,8 +85,8 @@ namespace Polymaker.SdvUI.Controls
         {
             if (ValidateCanAdd(item))
             {
-                item.SetParent(Owner);
                 Controls.Insert(index, item);
+                item.SetParent(Owner, true);
                 TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Add);
             }
         }
@@ -102,7 +102,7 @@ namespace Polymaker.SdvUI.Controls
             {
                 if (result)
                 {
-                    item.SetParent(null);
+                    item.SetParent(null, true);
                     TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Remove);
                 }
             }
@@ -114,7 +114,7 @@ namespace Polymaker.SdvUI.Controls
             if (index <= Controls.Count)
             {
                 var item = Controls[index];
-                item.SetParent(null);
+                item.SetParent(null, true);
                 Controls.RemoveAt(index);
                 TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Remove);
             }

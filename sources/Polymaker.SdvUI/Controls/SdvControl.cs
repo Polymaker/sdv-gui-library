@@ -22,21 +22,24 @@ namespace Polymaker.SdvUI.Controls
             set => SetParent(value);
         }
 
-        internal void SetParent(ISdvContainer value, bool addToCollection = true)
+        internal void SetParent(ISdvContainer value, bool fromCollection = false)
         {
             if (value != _Parent)
             {
-                if (value != null && !value.Controls.ValidateCanAdd(this))
+                if (!fromCollection)
                 {
-                    throw new InvalidOperationException();
+                    if (value != null && !value.Controls.ValidateCanAdd(this))
+                    {
+                        throw new InvalidOperationException();
+                    }
                 }
 
-                if (_Parent != null)
+                if (_Parent != null && !(fromCollection && value == null))
                     _Parent.Controls.Remove(this);
 
                 _Parent = value;
 
-                if (_Parent != null && !_Parent.Controls.Contains(this) && addToCollection)
+                if (!fromCollection && _Parent != null && !_Parent.Controls.Contains(this))
                     _Parent.Controls.Add(this);
 
                 if (!Initialized && value != null && FinForm() != null)
@@ -204,7 +207,7 @@ namespace Polymaker.SdvUI.Controls
             PaddingChanged?.Invoke(this, e);
         }
 
-        public Rectangle GetDisplayRectangle()
+        public virtual Rectangle GetDisplayRectangle()
         {
             if (Parent != null)
             {
@@ -319,6 +322,8 @@ namespace Polymaker.SdvUI.Controls
         public event EventHandler<SdvMouseEventArgs> MouseClick;
         public event EventHandler<SdvMouseEventArgs> MouseMove;
 
+        public event EventHandler Click;
+
         protected virtual void OnMouseEnter(SdvMouseEventArgs sme)
         {
             MouseEnter?.Invoke(this, sme);
@@ -338,6 +343,12 @@ namespace Polymaker.SdvUI.Controls
         {
             MouseMove?.Invoke(this, sme);
         }
+
+        protected internal virtual void OnLeftClick(Point pos)
+        {
+            Click?.Invoke(this, EventArgs.Empty);
+        }
+        
 
         #endregion
 

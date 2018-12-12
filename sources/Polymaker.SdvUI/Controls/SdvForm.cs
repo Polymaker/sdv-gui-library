@@ -145,6 +145,33 @@ namespace Polymaker.SdvUI.Controls
             //        control.PerformDraw(b);
             //}
         }
-        
+
+        public Point PointToDisplay(Point localPoint)
+        {
+            var db = GetDisplayRectangle();
+            return new Point(db.X + localPoint.X, db.Y + localPoint.Y);
+        }
+
+        public Point PointToLocal(Point displayPoint)
+        {
+            var db = GetDisplayRectangle();
+            return new Point(displayPoint.X - db.X, displayPoint.Y - db.Y);
+        }
+
+        public override void receiveLeftClick(int x, int y, bool playSound = true)
+        {
+            base.receiveLeftClick(x, y, playSound);
+            var mousePos = new Point(x, y);
+            var localPt = PointToLocal(mousePos);
+
+            foreach (var control in Controls)
+            {
+                if (control.Bounds.Contains(localPt))
+                {
+                    control.OnLeftClick(control.PointToLocal(mousePos));
+                    break;
+                }
+            }
+        }
     }
 }
