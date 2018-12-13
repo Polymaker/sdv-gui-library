@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using System;
 using System.Collections.Generic;
@@ -9,17 +10,29 @@ using System.Threading.Tasks;
 
 namespace Polymaker.SdvUI.Controls
 {
-    public class SdvControl : ISdvUIComponent
+    public class SdvControl : ISdvUIComponent, ISdvCoreEvents
     {
         //public static SpriteFont DefaultFont => Game1.smallFont;
 
         private ISdvContainer _Parent;
         public bool Initialized { get; private set; }
+        public bool Active { get; internal set; }
 
         public ISdvContainer Parent
         {
             get => _Parent;
             set => SetParent(value);
+        }
+
+        public MouseState Cursor => Mouse.GetState();
+
+        public Point CursorPosition
+        {
+            get
+            {
+                var mouse = Mouse.GetState();
+                return PointToLocal(new Point(mouse.X, mouse.Y));
+            }
         }
 
         internal void SetParent(ISdvContainer value, bool fromCollection = false)
@@ -214,8 +227,8 @@ namespace Polymaker.SdvUI.Controls
                 var parentBounds = Parent.GetDisplayRectangle();
                 var contentOffset = Parent.GetClientRectangle();
                 return new Rectangle(
-                    parentBounds.X + contentOffset.X + X + Parent.ScrollOffset.X, 
-                    parentBounds.Y + contentOffset.Y + Y + Parent.ScrollOffset.Y, 
+                    parentBounds.X + contentOffset.X + X - Parent.ScrollOffset.X, 
+                    parentBounds.Y + contentOffset.Y + Y - Parent.ScrollOffset.Y, 
                     Width, Height);
             }
             return Bounds;
@@ -279,6 +292,8 @@ namespace Polymaker.SdvUI.Controls
 
         public bool Enabled { get; set; } = true;
 
+        public bool Visible { get; set; } = true;
+
         #region Size & Bounds Management
 
         public void SetBounds(int x, int y, int width, int height, ControlBounds specifiedBounds)
@@ -317,38 +332,75 @@ namespace Polymaker.SdvUI.Controls
 
         #region Mouse events
 
-        public event EventHandler<SdvMouseEventArgs> MouseEnter;
-        public event EventHandler<SdvMouseEventArgs> MouseLeave;
-        public event EventHandler<SdvMouseEventArgs> MouseClick;
-        public event EventHandler<SdvMouseEventArgs> MouseMove;
+        public event EventHandler<MouseEventArgs> MouseDown;
+        public event EventHandler<MouseEventArgs> MouseUp;
+        public event EventHandler<MouseEventArgs> MouseClick;
+        public event EventHandler<MouseEventArgs> MouseMove;
+        public event EventHandler<int> ScrollWheel;
 
-        public event EventHandler Click;
 
-        protected virtual void OnMouseEnter(SdvMouseEventArgs sme)
+        protected virtual void OnMouseDown(MouseEventArgs e)
         {
-            MouseEnter?.Invoke(this, sme);
+            MouseDown?.Invoke(this, e);
         }
 
-        protected virtual void OnMouseLeave(SdvMouseEventArgs sme)
+        protected virtual void OnMouseUp(MouseEventArgs e)
         {
-            MouseLeave?.Invoke(this, sme);
+            MouseUp?.Invoke(this, e);
         }
 
-        protected virtual void OnMouseClick(SdvMouseEventArgs sme)
+        protected virtual void OnMouseClick(MouseEventArgs e)
         {
-            MouseClick?.Invoke(this, sme);
+            MouseClick?.Invoke(this, e);
         }
 
-        protected virtual void OnMouseMove(SdvMouseEventArgs sme)
+        protected virtual void OnMouseMove(MouseEventArgs e)
         {
-            MouseMove?.Invoke(this, sme);
+            MouseMove?.Invoke(this, e);
         }
 
-        protected internal virtual void OnLeftClick(Point pos)
+        protected virtual void OnScrollWheel(int delta)
         {
-            Click?.Invoke(this, EventArgs.Empty);
+            ScrollWheel?.Invoke(this, delta);
         }
-        
+
+        public virtual bool CaptureMouseWheel(int x, int y)
+        {
+            return false;
+        }
+
+        #endregion
+
+        #region Event redirection
+
+        private MouseButtons PressedMouseButtons = MouseButtons.None;
+        private Vector2 LastMousePress;
+
+        void ISdvCoreEvents.OnMouseDown(MouseEventArgs e)
+        {
+            OnMouseDown(e);
+            PressedMouseButtons |= e.Button;
+            LastMousePress = new Vector2(e.X, e.Y);
+        }
+
+        void ISdvCoreEvents.OnMouseUp(MouseEventArgs e)
+        {
+            OnMouseUp(e);
+            PressedMouseButtons ^= e.Button;
+            var curPos = new Vector2(e.X, e.Y);
+            if((curPos - LastMousePress).Length() < 3)
+                OnMouseClick(new MouseEventArgs(e.Location, e.DisplayLocation, e.Button));
+        }
+
+        void ISdvCoreEvents.OnMouseMove(MouseEventArgs e)
+        {
+            OnMouseMove(e);
+        }
+
+        void ISdvCoreEvents.OnScrollWheel(int delta)
+        {
+            OnScrollWheel(delta);
+        }
 
         #endregion
 
@@ -411,5 +463,7 @@ namespace Polymaker.SdvUI.Controls
             }
             return finalBounds;
         }
+
+        
     }
 }

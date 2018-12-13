@@ -65,11 +65,15 @@
     <Compile Include="ContentAlignment.cs" />
     <Compile Include="ControlBounds.cs" />
     <Compile Include="Controls\ControlsChangedEventArgs.cs" />
+    <Compile Include="Controls\ISdvContainerCore.cs" />
     <Compile Include="Controls\ISdvUIComponent.cs" />
+    <Compile Include="Controls\ISdvCoreEvents.cs" />
     <Compile Include="Controls\SdvButton.cs" />
     <Compile Include="Controls\SdvGameMenuForm.cs" />
     <Compile Include="Controls\SdvScrollBar.cs" />
     <Compile Include="Controls\ISdvContainer.cs" />
+    <Compile Include="MouseButtons.cs" />
+    <Compile Include="MouseEventArgs.cs" />
     <Compile Include="Orientation.cs" />
     <Compile Include="Padding.cs" />
     <Compile Include="Controls\SdvControlCollection.cs" />

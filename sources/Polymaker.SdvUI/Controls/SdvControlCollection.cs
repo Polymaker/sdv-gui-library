@@ -19,7 +19,7 @@ namespace Polymaker.SdvUI.Controls
 
         public ISdvContainer Owner { get; }
 
-        //public event EventHandler CollectionChanged;
+        public event EventHandler CollectionChanged;
         public event EventHandler<ControlsChangedEventArgs> ControlAdded;
         public event EventHandler<ControlsChangedEventArgs> ControlRemoved;
 
@@ -29,13 +29,17 @@ namespace Polymaker.SdvUI.Controls
             Controls = new List<SdvControl>();
         }
 
-        protected void TriggerCollectionChanged(SdvControl control, ControlsChangedEventArgs.Action action)
+        protected void FireAddRemove(SdvControl control, ControlsChangedEventArgs.Action action)
         {
-            //CollectionChanged?.Invoke(this, EventArgs.Empty);
             if (action == ControlsChangedEventArgs.Action.Add)
                 ControlAdded?.Invoke(this, new ControlsChangedEventArgs(control, action));
             else if (action == ControlsChangedEventArgs.Action.Remove)
                 ControlRemoved?.Invoke(this, new ControlsChangedEventArgs(control, action));
+        }
+
+        protected void FireCollectionChanged()
+        {
+            CollectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void Add(SdvControl item)
@@ -44,7 +48,50 @@ namespace Polymaker.SdvUI.Controls
             {
                 Controls.Add(item);
                 item.SetParent(Owner, true);
-                TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Add);
+                FireAddRemove(item, ControlsChangedEventArgs.Action.Add);
+                FireCollectionChanged();
+            }
+        }
+
+        public void Insert(int index, SdvControl item)
+        {
+            if (ValidateCanAdd(item))
+            {
+                Controls.Insert(index, item);
+                item.SetParent(Owner, true);
+                FireAddRemove(item, ControlsChangedEventArgs.Action.Add);
+                FireCollectionChanged();
+            }
+        }
+
+        public bool Remove(SdvControl item)
+        {
+            bool result = false;
+            try
+            {
+                result = Controls.Remove(item);
+            }
+            finally
+            {
+                if (result)
+                {
+                    item.SetParent(null, true);
+                    FireAddRemove(item, ControlsChangedEventArgs.Action.Remove);
+                    FireCollectionChanged();
+                }
+            }
+            return result;
+        }
+
+        public void RemoveAt(int index)
+        {
+            if (index <= Controls.Count)
+            {
+                var item = Controls[index];
+                item.SetParent(null, true);
+                Controls.RemoveAt(index);
+                FireAddRemove(item, ControlsChangedEventArgs.Action.Remove);
+                FireCollectionChanged();
             }
         }
 
@@ -55,9 +102,10 @@ namespace Polymaker.SdvUI.Controls
                 Controls.ForEach(c =>
                 {
                     c.SetParent(null, true);
-                    TriggerCollectionChanged(c, ControlsChangedEventArgs.Action.Remove);
+                    FireAddRemove(c, ControlsChangedEventArgs.Action.Remove);
                 });
                 Controls.Clear();
+                FireCollectionChanged();
             }
         }
 
@@ -79,45 +127,6 @@ namespace Polymaker.SdvUI.Controls
         public int IndexOf(SdvControl item)
         {
             return Controls.IndexOf(item);
-        }
-
-        public void Insert(int index, SdvControl item)
-        {
-            if (ValidateCanAdd(item))
-            {
-                Controls.Insert(index, item);
-                item.SetParent(Owner, true);
-                TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Add);
-            }
-        }
-
-        public bool Remove(SdvControl item)
-        {
-            bool result = false;
-            try
-            {
-                result = Controls.Remove(item);
-            }
-            finally
-            {
-                if (result)
-                {
-                    item.SetParent(null, true);
-                    TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Remove);
-                }
-            }
-            return result;
-        }
-
-        public void RemoveAt(int index)
-        {
-            if (index <= Controls.Count)
-            {
-                var item = Controls[index];
-                item.SetParent(null, true);
-                Controls.RemoveAt(index);
-                TriggerCollectionChanged(item, ControlsChangedEventArgs.Action.Remove);
-            }
         }
 
         public bool ValidateCanAdd(SdvControl control)

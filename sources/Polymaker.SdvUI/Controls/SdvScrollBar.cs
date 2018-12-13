@@ -11,8 +11,6 @@ namespace Polymaker.SdvUI.Controls
     public class SdvScrollBar : SdvControl
     {
         private int _MaxValue;
-        private int _LargeChange;
-        private int _SmallChange;
         private int _Value;
         private bool IsContainerScrollBar;
 
@@ -56,14 +54,20 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        public int LargeChange { get; set; }
+
+        public int SmallChange { get; set; }
+
+        public bool WheelScrollLarge { get; set; }
+
         public event EventHandler Scroll;
 
         public SdvScrollBar(Orientation orientation)
         {
             Orientation = orientation;
             _MaxValue = 1;
-            _SmallChange = 8;
-            _LargeChange = 32;
+            SmallChange = 8;
+            LargeChange = 32;
             if (Orientation == Orientation.Horizontal)
                 Height = SCROLLBAR_SIZE;
             else
@@ -74,8 +78,8 @@ namespace Polymaker.SdvUI.Controls
         {
             Orientation = orientation;
             _MaxValue = 1;
-            _SmallChange = 8;
-            _LargeChange = 32;
+            SmallChange = 8;
+            LargeChange = 32;
             IsContainerScrollBar = fromContainer;
 
             if (Orientation == Orientation.Horizontal)
@@ -178,19 +182,122 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        protected internal override void OnLeftClick(Point pos)
+        protected override void OnMouseClick(MouseEventArgs e)
         {
-            var displayPt = PointToDisplay(pos);
-            if (UpArrowBounds.Contains(displayPt))
+            base.OnMouseClick(e);
+            if (e.Button == MouseButtons.Left)
             {
-                if (Value > 0)
-                    Value -= _SmallChange;
-            }
-            else if (DownArrowBounds.Contains(displayPt))
-            {
-                if (Value < MaxValue)
-                    Value += _SmallChange;
+                if (UpArrowBounds.Contains(e.DisplayLocation))
+                {
+                    if (Value > 0)
+                        Value -= LargeChange;
+                }
+                else if (DownArrowBounds.Contains(e.DisplayLocation))
+                {
+                    if (Value < MaxValue)
+                        Value += LargeChange;
+                }
+                else if (ScrollbarTrackBounds.Contains(e.DisplayLocation))
+                {
+                    var clickedPos = GetScrollValueAtPosition(e.DisplayLocation);
+                    Value = clickedPos;
+                }
             }
         }
+
+        private bool MouseDragging = false;
+        private Vector2 DragStart;
+        private int DragStartValue;
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (e.Button == MouseButtons.Left)
+            {
+                var displayPt = PointToDisplay(e.Location);
+                if (ScrollbarButtonBounds.Contains(displayPt))
+                {
+                    MouseDragging = true;
+                    DragStartValue = Value;
+                    var worldPos = PointToDisplay(e.Location);
+                    DragStart = new Vector2(worldPos.X, worldPos.Y);
+                }
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            if(e.Button == MouseButtons.Left && MouseDragging)
+            {
+                MouseDragging = false;
+            }
+        }
+
+        protected override void OnScrollWheel(int delta)
+        {
+            base.OnScrollWheel(delta);
+            
+            Value += (WheelScrollLarge ? LargeChange : SmallChange) * Math.Sign(delta) * -1;
+        }
+
+        public override bool CaptureMouseWheel(int x, int y)
+        {
+            return Bounds.Contains(x, y);
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            if (MouseDragging)
+            {
+                //var curPos = new Vector2(e.DisplayLocation.X, e.DisplayLocation.Y);
+                //var dragDelta = curPos - DragStart;
+                //var newValueRatio = 0f;
+
+                //if (Orientation == Orientation.Vertical)
+                //    newValueRatio = (DragStart.Y - ScrollbarTrackBounds.Y + dragDelta.Y) / (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height);
+                //else
+                //    newValueRatio = (DragStart.X - ScrollbarTrackBounds.X + dragDelta.X) / (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Height);
+
+                Value = GetScrollValueAtPosition(e.DisplayLocation);
+            }
+        }
+
+        public int GetScrollValueAtPosition(Point position)
+        {
+            var positionRatio = 0f;
+
+            if (Orientation == Orientation.Vertical)
+                positionRatio = (position.Y - ScrollbarTrackBounds.Y - (ScrollbarButtonBounds.Height / 2f)) / (float)(ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height);
+            else
+                positionRatio = (position.X - ScrollbarTrackBounds.X - (ScrollbarButtonBounds.Width / 2f)) / (float)(ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Height);
+
+            var scrollValue = (int)Math.Max(0, Math.Min(MaxValue * positionRatio, MaxValue));
+
+            scrollValue = (int)Math.Round(scrollValue / (float)SmallChange) * SmallChange;
+
+            return scrollValue;
+        }
+
+        //protected override void OnUpdate(GameTime delta)
+        //{
+        //    base.OnUpdate(delta);
+        //    if (MouseDragging)
+        //    {
+        //        var curPos = new Vector2(Cursor.X, Cursor.Y);
+        //        var dragDelta = curPos - DragStart;
+        //        var newValueRatio = 0f;
+
+        //        if (Orientation == Orientation.Vertical)
+        //            newValueRatio = (DragStart.Y - ScrollbarTrackBounds.Y + dragDelta.Y) / (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height);
+        //        else
+        //            newValueRatio = (DragStart.X - ScrollbarTrackBounds.X + dragDelta.X) / (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Height);
+
+        //        Value = (int)(newValueRatio * MaxValue);
+        //    }
+        //}
     }
 }

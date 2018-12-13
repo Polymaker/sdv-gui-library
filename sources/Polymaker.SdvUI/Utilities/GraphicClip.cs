@@ -19,16 +19,22 @@ namespace Polymaker.SdvUI.Utilities
             OriginalClipRect = b.GraphicsDevice.ScissorRectangle;
             SB = b;
 
-            if(b.GraphicsDevice.RasterizerState == null || !b.GraphicsDevice.RasterizerState.ScissorTestEnable)
+            //if(b.GraphicsDevice.RasterizerState == null || !b.GraphicsDevice.RasterizerState.ScissorTestEnable)
+            //{
+            //    b.End();
+            //    b.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, new RasterizerState
+            //    {
+            //        ScissorTestEnable = true
+            //    });
+            //    EndDraw = true;
+            //}
+
+            b.End();
+            b.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, new RasterizerState
             {
-                b.End();
-                b.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, new RasterizerState
-                {
-                    ScissorTestEnable = true
-                });
-                EndDraw = true;
-            }
-            
+                ScissorTestEnable = true
+            });
+
             var fixedRect = clipRect;
 
             fixedRect.X = Math.Max(clipRect.X, 0);
@@ -43,11 +49,14 @@ namespace Polymaker.SdvUI.Utilities
         public void Dispose()
         {
             SB.GraphicsDevice.ScissorRectangle = OriginalClipRect;
-            if (EndDraw)
-            {
-                SB.End();
-                SB.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
-            }
+            //if (EndDraw)
+            //{
+            //    SB.End();
+            //    SB.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
+            //}
+
+            SB.End();
+            SB.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
         }
     }
 }

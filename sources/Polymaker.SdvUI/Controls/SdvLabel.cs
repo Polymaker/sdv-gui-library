@@ -59,6 +59,7 @@ namespace Polymaker.SdvUI.Controls
                 if (value != _Image)
                 {
                     _Image = value;
+                    AdjustSizeIfNeeded();
                 }
             }
         }
@@ -168,15 +169,17 @@ namespace Polymaker.SdvUI.Controls
 
             if (hasBoth)
             {
-                var ratioW = Image.Size.X / textSize.X;
-                var ratioH = Image.Size.Y / textSize.Y;
+                var sumW = Image.Size.X + textSize.X;
+                var sumH = Image.Size.Y + textSize.Y;
 
                 switch (TextImageRelation)
                 {
                     case TextImageRelation.ImageAboveText:
                     case TextImageRelation.TextAboveImage:
-                        imageBounds.Height = (int)((innerBounds.Height * ratioH) - (TextImageSpacing / 2f));
-                        textBounds.Height = (int)((innerBounds.Height / ratioH) - (TextImageSpacing / 2f));
+                        float availableHeight = innerBounds.Height - TextImageSpacing;
+                        imageBounds.Height = (int)(availableHeight * (Image.Size.Y / sumH));
+                        //textBounds.Height = (int)((availableHeight * (textSize.Y / sumH)) + TextImageSpacing / 2f);
+                        textBounds.Height = (int)(availableHeight - imageBounds.Height);
                         if (TextImageRelation == TextImageRelation.ImageAboveText)
                             textBounds.Y = innerBounds.Bottom - textBounds.Height;
                         else
@@ -184,8 +187,10 @@ namespace Polymaker.SdvUI.Controls
                         break;
                     case TextImageRelation.ImageBeforeText:
                     case TextImageRelation.TextBeforeImage:
-                        imageBounds.Width = (int)((innerBounds.Width * ratioW) - (TextImageSpacing / 2f));
-                        textBounds.Width = (int)((innerBounds.Width / ratioW) - (TextImageSpacing / 2f));
+                        float availableWidth = innerBounds.Width - TextImageSpacing;
+                        imageBounds.Width = (int)(availableWidth * (Image.Size.X / sumW));
+                        //textBounds.Width = (int)((availableWidth * (textSize.X / sumW)) + TextImageSpacing / 2f);
+                        textBounds.Width = (int)(availableWidth - imageBounds.Width);
                         if (TextImageRelation == TextImageRelation.ImageBeforeText)
                             textBounds.X = innerBounds.Right - textBounds.Width;
                         else
@@ -196,14 +201,14 @@ namespace Polymaker.SdvUI.Controls
 
             if (hasImage)
             {
-                imageBounds = GetAlignedBounds(imageBounds, Image.Size, TextAlign);
+                imageBounds = GetAlignedBounds(imageBounds, Image.Size, ImageAlign);
                 b.DrawImage(Image, imageBounds);
             }
 
             if (hasText)
             {
                 textBounds = GetAlignedBounds(textBounds, textSize, TextAlign);
-                b.DrawString(Font, Text, new Vector2(textBounds.X, textBounds.Y), ForeColor);
+                b.DrawString(Font, Text, new Vector2(textBounds.X, textBounds.Y + 4), ForeColor);
 
                 //Utility.drawTextWithShadow(b, Text,
                 //    Font, new Vector2(bounds.Center.X, (bounds.Center.Y + 4)) - Game1.smallFont.MeasureString(Text) / 2f,

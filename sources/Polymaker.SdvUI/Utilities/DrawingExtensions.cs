@@ -21,7 +21,7 @@ namespace Polymaker.SdvUI
 
         public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination)
         {
-            var computedScale = 1f;
+            var computedScale = image.Scale;
             if (image.Scale == 1f && (image.SourceRect.Width != destination.Width || image.SourceRect.Height != destination.Height))
             {
                 var minSize = Math.Min(image.Size.X, image.Size.Y);

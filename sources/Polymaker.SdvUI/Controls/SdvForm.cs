@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Polymaker.SdvUI.Utilities;
 using StardewValley.Menus;
 using System;
@@ -14,7 +15,12 @@ namespace Polymaker.SdvUI.Controls
     {
         private Padding _Padding = Padding.Empty;
         private Point _ScrollOffset;
+
+        public SdvControl ActiveControl { get; private set; }
+
         public SdvControlCollection Controls { get; }
+
+        public MouseState Cursor => Mouse.GetState();
 
         public int X
         {
@@ -128,7 +134,10 @@ namespace Polymaker.SdvUI.Controls
             base.draw(b);
 
             foreach (var control in Controls)
-                control.PerformDraw(b);
+            {
+                if(control.Visible)
+                    control.PerformDraw(b);
+            }
 
             //using (var clip = new GraphicClip(b, GetDisplayRectangle()))
             //{
@@ -158,20 +167,96 @@ namespace Polymaker.SdvUI.Controls
             return new Point(displayPoint.X - db.X, displayPoint.Y - db.Y);
         }
 
+        #region Event Redirection
+
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
             base.receiveLeftClick(x, y, playSound);
-            var mousePos = new Point(x, y);
-            var localPt = PointToLocal(mousePos);
+            ActiveControl = GetControlAtPosition(x, y);
+
+            if (ActiveControl != null)
+            {
+                var worldPoint = new Point(x, y);
+                var localPt = ActiveControl.PointToLocal(worldPoint);
+                ((ISdvCoreEvents)ActiveControl).OnMouseDown(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
+            }
+        }
+
+        public override void releaseLeftClick(int x, int y)
+        {
+            base.releaseLeftClick(x, y);
+            if (ActiveControl != null)
+            {
+                var worldPoint = new Point(x, y);
+                var localPt = ActiveControl.PointToLocal(worldPoint);
+                ((ISdvCoreEvents)ActiveControl).OnMouseUp(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
+            }
+        }
+
+        public override void performHoverAction(int x, int y)
+        {
+            base.performHoverAction(x, y);
+            var overControl = GetControlAtPosition(x, y);
+
+            if (overControl != null)
+            {
+                var worldPoint = new Point(x, y);
+                var localPt = overControl.PointToLocal(worldPoint);
+                ((ISdvCoreEvents)overControl).OnMouseMove(new MouseEventArgs(localPt, worldPoint, MouseButtons.None));
+            }
+        }
+
+        public override void receiveScrollWheelAction(int direction)
+        {
+            base.receiveScrollWheelAction(direction);
+            var cursorPos = new Point(Cursor.X, Cursor.Y);
 
             foreach (var control in Controls)
             {
-                if (control.Bounds.Contains(localPt))
-                {
-                    control.OnLeftClick(control.PointToLocal(mousePos));
-                    break;
-                }
+                var localPt = control.PointToLocal(cursorPos);
+
+                if (control.Visible && control.CaptureMouseWheel(localPt.X, localPt.Y))
+                    ((ISdvCoreEvents)control).OnScrollWheel(direction);
             }
         }
+
+        public virtual bool CaptureMouseWheel(int x, int y)
+        {
+            return false;
+        }
+
+        #endregion
+
+        public SdvControl GetControlAtPosition(int x, int y)
+        {
+            return GetControlAtPosition(this, x, y);
+        }
+
+        public SdvControl GetControlAtPosition(Point position)
+        {
+            return GetControlAtPosition(this, position.X, position.Y);
+        }
+
+        internal static SdvControl GetControlAtPosition(ISdvContainer container, int x, int y)
+        {
+            var controls = (container is ISdvContainerCore cc) ? cc.AllControls : container.Controls;
+
+            foreach (var ctrl in controls)
+            {
+                if (ctrl.Visible && ctrl.GetDisplayRectangle().Contains(x, y))
+                {
+                    if (ctrl is ISdvContainer childContainer)
+                        return GetControlAtPosition(childContainer, x, y);
+
+                    return ctrl;
+                }
+            }
+
+            if (container is SdvControl control)
+                return control;
+
+            return null;
+        }
+
     }
 }

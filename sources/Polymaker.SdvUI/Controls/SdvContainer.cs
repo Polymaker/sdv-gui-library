@@ -9,7 +9,7 @@ using Polymaker.SdvUI.Utilities;
 
 namespace Polymaker.SdvUI.Controls
 {
-    public class SdvContainer : SdvControl, ISdvContainer
+    public class SdvContainer : SdvControl, ISdvContainer, ISdvContainerCore
     {
         //private Point _ScrollOffset;
 
@@ -19,7 +19,7 @@ namespace Polymaker.SdvUI.Controls
 
         public Point ScrollOffset
         {
-            get => new Point(HScrollBarVisible ? HScrollBar.Value * -1 : 0, VScrollBarVisible ? VScrollBar.Value * -1 : 0);
+            get => new Point(HScrollBarVisible ? HScrollBar.Value : 0, VScrollBarVisible ? VScrollBar.Value : 0);
             set
             {
                 if (value != ScrollOffset)
@@ -34,11 +34,18 @@ namespace Polymaker.SdvUI.Controls
         }
 
         public SdvScrollBar HScrollBar { get; }
+
         public SdvScrollBar VScrollBar { get; }
 
         public bool HScrollBarVisible { get; private set; }
 
         public bool VScrollBarVisible { get; private set; }
+
+        private SdvScrollBar[] ScrollBars => new SdvScrollBar[] { HScrollBar, VScrollBar };
+
+        protected IEnumerable<SdvControl> AllControls => Controls.Concat(ScrollBars);
+
+        IEnumerable<SdvControl> ISdvContainerCore.AllControls => AllControls;
 
         public SdvContainer()
         {
@@ -47,33 +54,28 @@ namespace Polymaker.SdvUI.Controls
 
             HScrollBar = new SdvScrollBar(Orientation.Horizontal, true);
             HScrollBar.SetParent(this, true);
-            //HScrollBar.Scroll += HScrollBar_Scroll;
             VScrollBar = new SdvScrollBar(Orientation.Vertical, true);
             VScrollBar.SetParent(this, true);
-            //VScrollBar.Scroll += VScrollBar_Scroll;
+
             Controls.ControlAdded += Controls_ControlAdded;
             Controls.ControlRemoved += Controls_ControlRemoved;
+            Controls.CollectionChanged += Controls_CollectionChanged;
         }
 
-        private void VScrollBar_Scroll(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void HScrollBar_Scroll(object sender, EventArgs e)
-        {
-            
-        }
+        #region Controls Add/Remove/Resize
 
         private void Controls_ControlAdded(object sender, ControlsChangedEventArgs e)
         {
             e.Control.SizeChanged += Control_SizeChanged;
-            UpdateScrollBarsBounds();
         }
 
         private void Controls_ControlRemoved(object sender, ControlsChangedEventArgs e)
         {
             e.Control.SizeChanged -= Control_SizeChanged;
+        }
+
+        private void Controls_CollectionChanged(object sender, EventArgs e)
+        {
             UpdateScrollBarsBounds();
         }
 
@@ -81,6 +83,9 @@ namespace Polymaker.SdvUI.Controls
         {
             UpdateScrollBarsBounds();
         }
+
+        #endregion
+
 
         public Rectangle GetClientRectangle()
         {
@@ -160,6 +165,9 @@ namespace Polymaker.SdvUI.Controls
                 }
             }
 
+            HScrollBar.Visible = HScrollBarVisible;
+            VScrollBar.Visible = VScrollBarVisible;
+
             HScrollBar.MaxValue = Math.Max(ScrollSize.X - baseClientRect.Width, 1);
             VScrollBar.MaxValue = Math.Max(ScrollSize.Y - baseClientRect.Height, 1);
 
@@ -171,49 +179,92 @@ namespace Polymaker.SdvUI.Controls
         {
             base.OnDraw(b);
             var displayRect = GetDisplayRectangle();
-            var clientRect = GetClientRectangle();
-            clientRect.X += displayRect.X;
-            clientRect.Y += displayRect.Y;
+            //var clientRect = GetClientRectangle();
+            displayRect.Width -= VScrollBarVisible ? VScrollBar.Width : 0;
+            displayRect.Height -= HScrollBarVisible ? HScrollBar.Height : 0;
 
-            if (HScrollBarVisible)
-                HScrollBar.PerformDraw(b);
-
-            if (VScrollBarVisible)
-                VScrollBar.PerformDraw(b);
-
-            foreach (var control in Controls)
+            foreach (var control in ScrollBars.Where(s => s.Visible))
                 control.PerformDraw(b);
 
-            //using (var clip = new GraphicClip(b, clientRect))
-            //{
-            //    foreach (var control in Controls)
-            //        if (!(control is ISdvContainer))
-            //            control.PerformDraw(b);
-            //}
+            using (var clip = new GraphicClip(b, displayRect))
+            {
+                foreach (var control in Controls.Where(c => c.Visible))
+                    if (!(control is ISdvContainer))
+                        control.PerformDraw(b);
+            }
 
-            //foreach (var control in Controls)
-            //    if (control is ISdvContainer)
-            //        control.PerformDraw(b);
+            foreach (var control in Controls.Where(c => c.Visible))
+                if (control is ISdvContainer)
+                    control.PerformDraw(b);
         }
 
-        protected internal override void OnLeftClick(Point pos)
-        {
-            var allControls = Controls.ToList();
-            if (HScrollBarVisible)
-                allControls.Add(HScrollBar);
-            if (VScrollBarVisible)
-                allControls.Add(VScrollBar);
+        //protected override void OnMouseDown(MouseEventArgs e)
+        //{
+        //    foreach(var scrollBar in ScrollBars)
+        //    {
+        //        if (scrollBar.Visible && scrollBar.Bounds.Contains(e.Location))
+        //        {
+        //            ((ISdvCoreEvents)scrollBar).OnMouseDown(new MouseEventArgs(scrollBar.PointToLocal(e.DisplayLocation), e.DisplayLocation, e.Button));
+        //            return;
+        //        }
+        //    }
 
-            foreach (var ctrl in allControls)
+        //    base.OnMouseDown(e);
+        //}
+
+        //protected override void OnMouseUp(MouseEventArgs e)
+        //{
+        //    foreach (var scrollBar in ScrollBars)
+        //    {
+        //        if (scrollBar.Visible && scrollBar.Bounds.Contains(e.Location))
+        //        {
+        //            ((ISdvCoreEvents)scrollBar).OnMouseUp(new MouseEventArgs(scrollBar.PointToLocal(e.DisplayLocation), e.DisplayLocation, e.Button));
+        //            return;
+        //        }
+        //    }
+
+        //    base.OnMouseUp(e);
+        //}
+
+        public override bool CaptureMouseWheel(int x, int y)
+        {
+            foreach(var control in Controls)
             {
-                if(ctrl.Bounds.Contains(pos))
-                {
-                    var localPt = new Point(pos.X - ctrl.X, pos.Y - ctrl.Y);
-                    ctrl.OnLeftClick(localPt);
-                    return;
-                }
+                var localPt = PointToControl(x, y, control);
+                if (control.CaptureMouseWheel(localPt.X, localPt.Y))
+                    return true;
             }
-            base.OnLeftClick(pos);
+
+            return VScrollBar.Visible;
+        }
+
+        protected override void OnScrollWheel(int delta)
+        {
+            var curPos = CursorPosition;
+            var controlAtCursor = GetControlAtPosition(curPos);
+            if (controlAtCursor != null && controlAtCursor != this && controlAtCursor.CaptureMouseWheel(curPos.X, curPos.Y))
+            {
+                ((ISdvCoreEvents)controlAtCursor).OnScrollWheel(delta);
+            }
+            else if(VScrollBarVisible)
+            {
+                ((ISdvCoreEvents)VScrollBar).OnScrollWheel(delta);
+            }
+        }
+
+        private Point PointToControl(int x, int y, SdvControl control)
+        {
+            return new Point(x - control.X, y - control.Y);
+        }
+
+        public SdvControl GetControlAtPosition(int x, int y)
+        {
+            return SdvForm.GetControlAtPosition(this, x, y);
+        }
+
+        public SdvControl GetControlAtPosition(Point position)
+        {
+            return SdvForm.GetControlAtPosition(this, position.X, position.Y);
         }
     }
 }
