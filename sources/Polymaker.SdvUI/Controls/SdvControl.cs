@@ -92,10 +92,10 @@ namespace Polymaker.SdvUI.Controls
 
         #region Text related members
 
-        private SpriteFont _Font;
+        private SdvFont _Font;
         private string _Text;
 
-        public SpriteFont Font
+        public SdvFont Font
         {
             get => _Font;
             set
@@ -406,7 +406,8 @@ namespace Polymaker.SdvUI.Controls
 
         protected virtual void OnDrawBackground(SpriteBatch b)
         {
-
+            if (BackColor != Color.Transparent)
+                b.Draw(Game1.staminaRect, GetDisplayRectangle(), BackColor);
         }
 
         protected virtual void OnDraw(SpriteBatch b)
@@ -416,54 +417,12 @@ namespace Polymaker.SdvUI.Controls
 
         internal void PerformDraw(SpriteBatch b)
         {
-            if(Width > 0 && Height > 0)
+            if (Width > 0 && Height > 0)
             {
                 OnDrawBackground(b);
                 OnDraw(b);
             }
         }
-
-        public static Rectangle GetAlignedBounds(Rectangle containerBounds, Vector2 elementSize, ContentAlignment alignment)
-        {
-            var finalBounds = containerBounds;
-            var newSize = Vector2.Min(new Vector2(containerBounds.Width, containerBounds.Height), elementSize);
-            switch (alignment)
-            {
-                case ContentAlignment.BottomCenter:
-                case ContentAlignment.BottomLeft:
-                case ContentAlignment.BottomRight:
-                    finalBounds = new Rectangle(finalBounds.X, finalBounds.Bottom - (int)newSize.Y, finalBounds.Width, (int)newSize.Y);
-                    break;
-                case ContentAlignment.MiddleCenter:
-                case ContentAlignment.MiddleLeft:
-                case ContentAlignment.MiddleRight:
-                    finalBounds = new Rectangle(finalBounds.X, finalBounds.Center.Y - (int)(newSize.Y / 2f), finalBounds.Width, (int)newSize.Y);
-                    break;
-                default:
-                    finalBounds = new Rectangle(finalBounds.X, finalBounds.Y, finalBounds.Width, (int)newSize.Y);
-                    break;
-            }
-            switch (alignment)
-            {
-                case ContentAlignment.BottomLeft:
-                case ContentAlignment.MiddleLeft:
-                case ContentAlignment.TopLeft:
-                    finalBounds.Width = (int)newSize.X;
-                    break;
-                case ContentAlignment.BottomCenter:
-                case ContentAlignment.MiddleCenter:
-                case ContentAlignment.TopCenter:
-                    finalBounds.X = finalBounds.Center.X - (int)(newSize.X / 2f);
-                    finalBounds.Width = (int)newSize.X;
-                    break;
-                default:
-                    finalBounds.X = finalBounds.Right - (int)newSize.X;
-                    finalBounds.Width = (int)newSize.X;
-                    break;
-            }
-            return finalBounds;
-        }
-
         
     }
 }

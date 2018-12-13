@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Polymaker.SdvUI.Controls;
+using Polymaker.SdvUI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
 using System;
@@ -40,34 +42,73 @@ namespace Polymaker.SdvUI
             if (withShadow)
             {
                 Utility.drawWithShadow(b, image.Texture,
-                    new Vector2((float)destination.X + (float)(image.SourceRect.Width / 2) * scale, (float)destination.Y + (float)(image.SourceRect.Height / 2) * scale),
-                    image.SourceRect, color, 0f, new Vector2((float)(image.SourceRect.Width / 2), (float)(image.SourceRect.Height / 2)), scale, false, 0.86f + (float)destination.Y / 20000f, -1, -1, 0.35f);
+                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale, destination.Y + image.SourceRect.Height / 2 * scale),
+                    image.SourceRect, color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, false, 0.86f + destination.Y / 20000f, -1, -1, 0.35f);
             }
             else
             {
                 b.Draw(image.Texture,
-                    new Vector2((float)destination.X + (float)(image.SourceRect.Width / 2) * scale, (float)destination.Y + (float)(image.SourceRect.Height / 2) * scale), image.SourceRect,
-                    color, 0f, new Vector2((float)(image.SourceRect.Width / 2), (float)(image.SourceRect.Height / 2)), scale, SpriteEffects.None, 0.86f + (float)destination.Y / 20000f);
+                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale, destination.Y + image.SourceRect.Height / 2 * scale), image.SourceRect,
+                    color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, SpriteEffects.None, 0.86f + destination.Y / 20000f);
             }
         }
+
+        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, Color color/* = default(Color)*/, Vector2 scale, bool withShadow = false)
+        {
+            if (withShadow)
+            {
+
+            }
+            else
+            {
+                b.Draw(image.Texture,
+                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale.X, destination.Y + image.SourceRect.Height / 2 * scale.Y), image.SourceRect,
+                    color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, SpriteEffects.None, 0.86f + destination.Y / 20000f);
+            }
+        }
+
+        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, Color color)
+        {
+            
+        }
+
+        public static void DrawImageUnstreched(this SpriteBatch b, SdvImage image, Rectangle destination, Color color)
+        {
+
+        }
+
+        public static void DrawImageUnstreched(this SpriteBatch b, SdvImage image, Rectangle destination, float scale, Color color)
+        {
+
+        }
+
+        public static void DrawImageUnscaled(this SpriteBatch b, SdvImage image, Rectangle destination, Color color)
+        {
+            b.Draw(image.Texture,
+                    new Vector2(destination.X + (float)(image.SourceRect.Width / 2), destination.Y + (float)(image.SourceRect.Height / 2)), image.SourceRect,
+                    color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), 1f, SpriteEffects.None, 0.86f + destination.Y / 20000f);
+        }
+
 
         public static void DrawImageRotated(this SpriteBatch b, SdvImage image, Rectangle destination, float rotation, Color color, float scale = 1f, bool withShadow = false)
         {
             if (withShadow)
             {
                 Utility.drawWithShadow(b, image.Texture,
-                    new Vector2((float)destination.X + (float)(image.SourceRect.Width / 2) * scale, (float)destination.Y + (float)(image.SourceRect.Height / 2) * scale),
-                    image.SourceRect, color, rotation, new Vector2((float)(image.SourceRect.Width / 2), (float)(image.SourceRect.Height / 2)), scale, false, 0.86f + (float)destination.Y / 20000f, -1, -1, 0.35f);
+                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale, destination.Y + image.SourceRect.Height / 2 * scale),
+                    image.SourceRect, color, rotation, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, false, 0.86f + destination.Y / 20000f, -1, -1, 0.35f);
             }
             else
             {
                 b.Draw(image.Texture,
-                    new Vector2((float)destination.X + (float)(image.SourceRect.Width / 2) * scale, (float)destination.Y + (float)(image.SourceRect.Height / 2) * scale), image.SourceRect,
-                    color, rotation, new Vector2((float)(image.SourceRect.Width / 2), (float)(image.SourceRect.Height / 2)), scale, SpriteEffects.None, 0.86f + (float)destination.Y / 20000f);
+                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale, destination.Y + image.SourceRect.Height / 2 * scale), image.SourceRect,
+                    color, rotation, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, SpriteEffects.None, 0.86f + destination.Y / 20000f);
             }
         }
 
         #endregion
+
+        #region TextureBox
 
         public static void DrawTextureBox(this SpriteBatch b, SdvImage image, Vector2 position)
         {
@@ -97,6 +138,37 @@ namespace Polymaker.SdvUI
 
             IClickableMenu.drawTextureBox(b, image.Texture, image.SourceRect, destination.X, destination.Y, destination.Width, destination.Height, color, scale, withShadow);
         }
+
+        #endregion
+
+        #region Text
+
+        public static void DrawString(this SpriteBatch b, string text, SdvFont font, Color color, Vector2 pos)
+        {
+            if (font.Bold)
+            {
+                //todo: draw shadow if combined
+                Utility.drawBoldText(b, text, font.Sprite, pos, color, font.Scale);
+            }
+            else if (font.DrawShadow)
+                Utility.drawTextWithShadow(b, text, font.Sprite, pos, color, font.Scale);
+            else
+                b.DrawString(font.Sprite, text, pos, color, 0f, Vector2.Zero, font.Scale, SpriteEffects.None, 0f);
+        }
+
+        public static void DrawString(this SpriteBatch b, string text, SdvFont font, Color color, Rectangle rect)
+        {
+            DrawString(b, text, font, color, new Vector2(rect.X, rect.Y));
+        }
+
+        public static void DrawString(this SpriteBatch b, string text, SdvFont font, Color color, Rectangle rect, ContentAlignment textAlign)
+        {
+            var textSize = font.MeasureString(text);
+            var correctedBounds = LayoutHelper.GetAlignedBounds(rect, textSize, textAlign);
+            DrawString(b, text, font, color, new Vector2(correctedBounds.X, correctedBounds.Y));
+        }
+
+        #endregion
 
     }
 }

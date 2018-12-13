@@ -17,11 +17,17 @@ namespace Polymaker.SdvUI.Controls
 
         public ControlsChangedEventArgs(SdvControl control, Action changeType)
         {
-            Control = control;
+            Controls = new SdvControl[] { control };
             ChangeType = changeType;
         }
 
-        public SdvControl Control { get; }
+        public ControlsChangedEventArgs(IEnumerable<SdvControl> controls, Action changeType)
+        {
+            Controls = controls;
+            ChangeType = changeType;
+        }
+
+        public IEnumerable<SdvControl> Controls { get; }
         
         public Action ChangeType { get; }
     }

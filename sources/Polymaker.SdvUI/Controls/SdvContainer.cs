@@ -57,25 +57,23 @@ namespace Polymaker.SdvUI.Controls
             VScrollBar = new SdvScrollBar(Orientation.Vertical, true);
             VScrollBar.SetParent(this, true);
 
-            Controls.ControlAdded += Controls_ControlAdded;
-            Controls.ControlRemoved += Controls_ControlRemoved;
             Controls.CollectionChanged += Controls_CollectionChanged;
         }
 
         #region Controls Add/Remove/Resize
 
-        private void Controls_ControlAdded(object sender, ControlsChangedEventArgs e)
+        private void Controls_CollectionChanged(object sender, ControlsChangedEventArgs e)
         {
-            e.Control.SizeChanged += Control_SizeChanged;
-        }
-
-        private void Controls_ControlRemoved(object sender, ControlsChangedEventArgs e)
-        {
-            e.Control.SizeChanged -= Control_SizeChanged;
-        }
-
-        private void Controls_CollectionChanged(object sender, EventArgs e)
-        {
+            if (e.ChangeType == ControlsChangedEventArgs.Action.Add)
+            {
+                foreach (var ctrl in e.Controls)
+                    ctrl.SizeChanged += Control_SizeChanged;
+            }
+            else if (e.ChangeType == ControlsChangedEventArgs.Action.Remove)
+            {
+                foreach (var ctrl in e.Controls)
+                    ctrl.SizeChanged -= Control_SizeChanged;
+            }
             UpdateScrollBarsBounds();
         }
 

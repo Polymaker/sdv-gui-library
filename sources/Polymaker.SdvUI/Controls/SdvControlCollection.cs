@@ -19,9 +19,7 @@ namespace Polymaker.SdvUI.Controls
 
         public ISdvContainer Owner { get; }
 
-        public event EventHandler CollectionChanged;
-        public event EventHandler<ControlsChangedEventArgs> ControlAdded;
-        public event EventHandler<ControlsChangedEventArgs> ControlRemoved;
+        public event EventHandler<ControlsChangedEventArgs> CollectionChanged;
 
         public SdvControlCollection(ISdvContainer owner)
         {
@@ -29,17 +27,9 @@ namespace Polymaker.SdvUI.Controls
             Controls = new List<SdvControl>();
         }
 
-        protected void FireAddRemove(SdvControl control, ControlsChangedEventArgs.Action action)
+        protected void OnCollectionChanged(ControlsChangedEventArgs args)
         {
-            if (action == ControlsChangedEventArgs.Action.Add)
-                ControlAdded?.Invoke(this, new ControlsChangedEventArgs(control, action));
-            else if (action == ControlsChangedEventArgs.Action.Remove)
-                ControlRemoved?.Invoke(this, new ControlsChangedEventArgs(control, action));
-        }
-
-        protected void FireCollectionChanged()
-        {
-            CollectionChanged?.Invoke(this, EventArgs.Empty);
+            CollectionChanged?.Invoke(this, args);
         }
 
         public void Add(SdvControl item)
@@ -48,8 +38,18 @@ namespace Polymaker.SdvUI.Controls
             {
                 Controls.Add(item);
                 item.SetParent(Owner, true);
-                FireAddRemove(item, ControlsChangedEventArgs.Action.Add);
-                FireCollectionChanged();
+                OnCollectionChanged(new ControlsChangedEventArgs(item, ControlsChangedEventArgs.Action.Add));
+            }
+        }
+
+        public void AddRange(IEnumerable<SdvControl> items)
+        {
+            var validItems = items.Where(i => ValidateCanAdd(i)).ToList();
+            if (validItems.Count > 0)
+            {
+                Controls.AddRange(validItems);
+                validItems.ForEach(i => i.SetParent(Owner, true));
+                OnCollectionChanged(new ControlsChangedEventArgs(validItems, ControlsChangedEventArgs.Action.Add));
             }
         }
 
@@ -59,8 +59,7 @@ namespace Polymaker.SdvUI.Controls
             {
                 Controls.Insert(index, item);
                 item.SetParent(Owner, true);
-                FireAddRemove(item, ControlsChangedEventArgs.Action.Add);
-                FireCollectionChanged();
+                OnCollectionChanged(new ControlsChangedEventArgs(item, ControlsChangedEventArgs.Action.Add));
             }
         }
 
@@ -76,8 +75,7 @@ namespace Polymaker.SdvUI.Controls
                 if (result)
                 {
                     item.SetParent(null, true);
-                    FireAddRemove(item, ControlsChangedEventArgs.Action.Remove);
-                    FireCollectionChanged();
+                    OnCollectionChanged(new ControlsChangedEventArgs(item, ControlsChangedEventArgs.Action.Remove));
                 }
             }
             return result;
@@ -90,8 +88,7 @@ namespace Polymaker.SdvUI.Controls
                 var item = Controls[index];
                 item.SetParent(null, true);
                 Controls.RemoveAt(index);
-                FireAddRemove(item, ControlsChangedEventArgs.Action.Remove);
-                FireCollectionChanged();
+                OnCollectionChanged(new ControlsChangedEventArgs(item, ControlsChangedEventArgs.Action.Remove));
             }
         }
 
@@ -99,13 +96,13 @@ namespace Polymaker.SdvUI.Controls
         {
             if (Controls.Count > 0)
             {
+                var controls = Controls.ToArray();
                 Controls.ForEach(c =>
                 {
                     c.SetParent(null, true);
-                    FireAddRemove(c, ControlsChangedEventArgs.Action.Remove);
                 });
                 Controls.Clear();
-                FireCollectionChanged();
+                OnCollectionChanged(new ControlsChangedEventArgs(controls, ControlsChangedEventArgs.Action.Remove));
             }
         }
 

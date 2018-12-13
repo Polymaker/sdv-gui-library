@@ -69,7 +69,10 @@
     <Compile Include="Controls\ISdvUIComponent.cs" />
     <Compile Include="Controls\ISdvCoreEvents.cs" />
     <Compile Include="Controls\SdvButton.cs" />
+    <Compile Include="Controls\SdvContainerControl.cs" />
+    <Compile Include="Controls\SdvFont.cs" />
     <Compile Include="Controls\SdvGameMenuForm.cs" />
+    <Compile Include="Controls\SdvScrollableControl.cs" />
     <Compile Include="Controls\SdvScrollBar.cs" />
     <Compile Include="Controls\ISdvContainer.cs" />
     <Compile Include="MouseButtons.cs" />
@@ -87,6 +90,7 @@
     <Compile Include="TextImageRelation.cs" />
     <Compile Include="Utilities\DrawingExtensions.cs" />
     <Compile Include="Utilities\GraphicClip.cs" />
+    <Compile Include="Utilities\LayoutHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
