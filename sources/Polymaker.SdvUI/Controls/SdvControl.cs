@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Polymaker.SdvUI.Drawing;
 using StardewValley;
 using System;
 using System.Collections.Generic;
@@ -143,7 +144,11 @@ namespace Polymaker.SdvUI.Controls
         private int _Width;
         private int _Height;
         private Padding _Padding = Padding.Empty;
-        private Rectangle? _CachedBounds;
+        private const int CONTROL_BOUNDS = 0;
+        private const int CLIENT_BOUNDS = 1;
+        private const int PARENT_BOUNDS = 2;
+        private const int DISPLAY_BOUNDS = 3;
+        private Rectangle?[] CachedBounds = new Rectangle?[4];
 
         public int X
         {
@@ -198,12 +203,34 @@ namespace Polymaker.SdvUI.Controls
         {
             get
             {
-                if (_CachedBounds.HasValue)
-                    return _CachedBounds.Value;
-                _CachedBounds = new Rectangle(X, Y, Width, Height);
-                return _CachedBounds.Value;
+                if (!CachedBounds[CONTROL_BOUNDS].HasValue)
+                    CachedBounds[CONTROL_BOUNDS] = new Rectangle(X, Y, Width, Height);
+
+                return CachedBounds[CONTROL_BOUNDS].Value;
             }
             set => SetBounds(value.X, value.Y, value.Width, value.Height, ControlBounds.All);
+        }
+
+        public Rectangle ClientRectangle
+        {
+            get
+            {
+                if (!CachedBounds[CLIENT_BOUNDS].HasValue)
+                    CachedBounds[CLIENT_BOUNDS] = GetClientRectangle();
+
+                return CachedBounds[CLIENT_BOUNDS].Value;
+            }
+        }
+
+        public Rectangle DisplayRectangle
+        {
+            get
+            {
+                if (!CachedBounds[DISPLAY_BOUNDS].HasValue || HasParentBoundsChanged())
+                    CachedBounds[DISPLAY_BOUNDS] = GetDisplayRectangle();
+
+                return CachedBounds[DISPLAY_BOUNDS].Value;
+            }
         }
 
         public event EventHandler SizeChanged;
@@ -220,35 +247,59 @@ namespace Polymaker.SdvUI.Controls
             PaddingChanged?.Invoke(this, e);
         }
 
+        private bool HasParentBoundsChanged()
+        {
+            if (CachedBounds[PARENT_BOUNDS].HasValue != (Parent != null))
+                return true;
+
+            if (Parent != null && CachedBounds[PARENT_BOUNDS].HasValue)
+                return CachedBounds[PARENT_BOUNDS].Value == Parent.DisplayRectangle;
+
+            return false;
+        }
+
         public virtual Rectangle GetDisplayRectangle()
         {
             if (Parent != null)
             {
-                var parentBounds = Parent.GetDisplayRectangle();
-                var contentOffset = Parent.GetClientRectangle();
+                var parentBounds = (CachedBounds[PARENT_BOUNDS] = Parent.DisplayRectangle).Value;
+                var contentOffset = Parent.ClientRectangle;
+                var scrollOffset = (Parent is IScrollableContainer sc ? sc.ScrollOffset : Point.Zero);
                 return new Rectangle(
-                    parentBounds.X + contentOffset.X + X - Parent.ScrollOffset.X, 
-                    parentBounds.Y + contentOffset.Y + Y - Parent.ScrollOffset.Y, 
+                    parentBounds.X + contentOffset.X + X - scrollOffset.X, 
+                    parentBounds.Y + contentOffset.Y + Y - scrollOffset.Y, 
                     Width, Height);
+            }
+            else
+            {
+                CachedBounds[PARENT_BOUNDS] = null;
             }
             return Bounds;
         }
 
+        public void InvalidateDisplayRectangle()
+        {
+            CachedBounds[DISPLAY_BOUNDS] = null;
+        }
+
+        public virtual Rectangle GetClientRectangle()
+        {
+            return new Rectangle(Padding.Left, Padding.Top, Width - Padding.Horizontal,  Height - Padding.Vertical);
+        }
+
         public Point PointToDisplay(Point localPoint)
         {
-            var db = GetDisplayRectangle();
-            return new Point(db.X + localPoint.X, db.Y + localPoint.Y);
+            return new Point(DisplayRectangle.X + localPoint.X, DisplayRectangle.Y + localPoint.Y);
         }
 
         public Point PointToLocal(Point displayPoint)
         {
-            var db = GetDisplayRectangle();
-            return new Point(displayPoint.X - db.X, displayPoint.Y - db.Y);
+            return new Point(displayPoint.X - DisplayRectangle.X, displayPoint.Y - DisplayRectangle.Y);
         }
 
         #endregion
 
-        private Color _BackColor = Color.White;
+        private Color _BackColor = Color.Transparent;
         private Color _ForeColor = Color.Black;
 
         public Color BackColor
@@ -318,7 +369,9 @@ namespace Polymaker.SdvUI.Controls
                 _Y = y;
                 _Width = width;
                 _Height = height;
-                _CachedBounds = null;
+                CachedBounds[CONTROL_BOUNDS] = null;
+                CachedBounds[CLIENT_BOUNDS] = null;
+                CachedBounds[DISPLAY_BOUNDS] = null;
                 OnSizeChanged(EventArgs.Empty);
             }
         }
@@ -415,14 +468,35 @@ namespace Polymaker.SdvUI.Controls
 
         }
 
+        protected virtual void OnDrawBackground2(SdvGraphics g)
+        {
+            if (BackColor != Color.Transparent)
+                g.FillRect(BackColor, Bounds);
+        }
+
+        protected virtual void OnDraw2(SdvGraphics g)
+        {
+
+        }
+
         internal void PerformDraw(SpriteBatch b)
+        {
+            using (var g = new SdvGraphics(b, DisplayRectangle.Location))
+                PerformDraw(g);
+
+            //if (Width > 0 && Height > 0)
+            //{
+            //    OnDrawBackground(b);
+            //    OnDraw(b);
+            //}
+        }
+        internal void PerformDraw(SdvGraphics g)
         {
             if (Width > 0 && Height > 0)
             {
-                OnDrawBackground(b);
-                OnDraw(b);
+                OnDrawBackground2(g);
+                OnDraw2(g);
             }
         }
-        
     }
 }

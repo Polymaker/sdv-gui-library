@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Polymaker.SdvUI.Drawing;
 
 namespace Polymaker.SdvUI.Controls
 {
@@ -33,7 +34,7 @@ namespace Polymaker.SdvUI.Controls
                 if (value != _Value)
                 {
                     _Value = value;
-                    OnScroll(EventArgs.Empty);
+                    OnScrollCore();
                 }
             }
         }
@@ -50,13 +51,42 @@ namespace Polymaker.SdvUI.Controls
                     _MaxValue = value;
                     if (Value > value)
                         Value = value;
+                    AdjustMaxValue();
                 }
             }
         }
 
-        public int LargeChange { get; set; }
+        private int _LargeChange;
+        private int _SmallChange;
 
-        public int SmallChange { get; set; }
+        public int LargeChange
+        {
+            get => _LargeChange;
+            set
+            {
+                value = value < SmallChange ? SmallChange : value;
+                if (value != _LargeChange)
+                {
+                    _LargeChange = value;
+                    AdjustMaxValue();
+                }
+            }
+        }
+
+        public int SmallChange
+        {
+            get => _SmallChange;
+            set
+            {
+                value = value < 1 ? 1 : value;
+                if (value != _SmallChange)
+                {
+                    _SmallChange = value;
+                    _LargeChange = (int)Math.Ceiling((_LargeChange / (double)value)) * value;
+                    AdjustMaxValue();
+                }
+            }
+        }
 
         public bool WheelScrollLarge { get; set; }
 
@@ -88,6 +118,12 @@ namespace Polymaker.SdvUI.Controls
                 Width = SCROLLBAR_SIZE;
         }
 
+        private void OnScrollCore()
+        {
+            UpdateScrollButtonBounds();
+            OnScroll(EventArgs.Empty);
+        }
+
         protected void OnScroll(EventArgs e)
         {
             Scroll?.Invoke(this, e);
@@ -105,6 +141,13 @@ namespace Polymaker.SdvUI.Controls
             }
 
             base.SetBoundsCore(x, y, width, height, specifiedBounds);
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            UpdateScrollbarBounds();
+            UpdateScrollButtonBounds();
         }
 
         public override Rectangle GetDisplayRectangle()
@@ -135,7 +178,12 @@ namespace Polymaker.SdvUI.Controls
         //    UpdateScrollbarBounds();
         //}
 
-        private void UpdateScrollbarBounds()
+        private void AdjustMaxValue()
+        {
+            _MaxValue = (int)Math.Ceiling(_MaxValue / (double)LargeChange) * LargeChange;
+        }
+
+        private void UpdateScrollbarBounds_Old()
         {
             var bound = GetDisplayRectangle();
 
@@ -159,11 +207,41 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        private void UpdateScrollbarBounds()
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                UpArrowBounds = new Rectangle(0, 0, 44, 48);
+                DownArrowBounds = new Rectangle(0, Height - 48, 44, 48);
+                ScrollbarTrackBounds = new Rectangle(12, UpArrowBounds.Bottom + 4, TRACK_SIZE, Height - (UpArrowBounds.Height + 4) * 2);
+            }
+            else
+            {
+                UpArrowBounds = new Rectangle(0, 0, 48, 44);
+                DownArrowBounds = new Rectangle(Width - 48, 0, 48, 44);
+                ScrollbarTrackBounds = new Rectangle(UpArrowBounds.Right + 4, 11, Width - (UpArrowBounds.Width + 4) * 2, TRACK_SIZE);
+            }
+        }
+
+        private void UpdateScrollButtonBounds()
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 24, 40);
+                ScrollbarButtonBounds.Y += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height));
+            }
+            else
+            {
+                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 40, 24);
+                ScrollbarButtonBounds.X += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Width));
+            }
+        }
+
         protected override void OnDraw(SpriteBatch b)
         {
             base.OnDraw(b);
 
-            UpdateScrollbarBounds();
+            UpdateScrollbarBounds_Old();
             //var bound = DisplayBounds;
 
             b.DrawTextureBox(SdvImages.ScrollBarTrack, ScrollbarTrackBounds, Color.White, 4f, true);
@@ -182,45 +260,64 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        protected override void OnDraw2(SdvGraphics g)
+        {
+            base.OnDraw2(g);
+            g.DrawTextureBox(SdvImages.ScrollBarTrack, ScrollbarTrackBounds, Color.White, 4f, true);
+
+            if (Orientation == Orientation.Vertical)
+            {
+                g.DrawImage(SdvImages.UpArrow, UpArrowBounds, Value > 0 ? Color.White : Color.Gray, 4f);
+                g.DrawImage(SdvImages.DownArrow, DownArrowBounds, Value < MaxValue ? Color.White : Color.Gray, 4f);
+                g.DrawImage(SdvImages.VScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
+            }
+            else
+            {
+                g.DrawImageRotated(SdvImages.UpArrow, UpArrowBounds, -3.14f / 2f, Color.White, 4f);
+                g.DrawImageRotated(SdvImages.DownArrow, DownArrowBounds, -3.14f / 2f, Color.White, 4f);
+                g.DrawImage(SdvImages.HScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
+            }
+        }
+
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
             if (e.Button == MouseButtons.Left)
             {
-                if (UpArrowBounds.Contains(e.DisplayLocation))
+                if (UpArrowBounds.Contains(e.Location))
                 {
                     if (Value > 0)
                         Value -= LargeChange;
                 }
-                else if (DownArrowBounds.Contains(e.DisplayLocation))
+                else if (DownArrowBounds.Contains(e.Location))
                 {
                     if (Value < MaxValue)
                         Value += LargeChange;
                 }
-                else if (ScrollbarTrackBounds.Contains(e.DisplayLocation))
+                else if (ScrollbarTrackBounds.Contains(e.Location))
                 {
-                    var clickedPos = GetScrollValueAtPosition(e.DisplayLocation);
+                    var clickedPos = GetScrollValueAtPosition(e.Location);
                     Value = clickedPos;
                 }
             }
         }
 
         private bool MouseDragging = false;
-        private Vector2 DragStart;
-        private int DragStartValue;
+        //private Vector2 DragStart;
+        //private int DragStartValue;
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
             if (e.Button == MouseButtons.Left)
             {
-                var displayPt = PointToDisplay(e.Location);
-                if (ScrollbarButtonBounds.Contains(displayPt))
+                //var displayPt = PointToDisplay(e.Location);
+                if (ScrollbarButtonBounds.Contains(e.Location))
                 {
                     MouseDragging = true;
-                    DragStartValue = Value;
-                    var worldPos = PointToDisplay(e.Location);
-                    DragStart = new Vector2(worldPos.X, worldPos.Y);
+                    //DragStartValue = Value;
+                    //var worldPos = PointToDisplay(e.Location);
+                    //DragStart = new Vector2(worldPos.X, worldPos.Y);
                 }
             }
         }
@@ -262,7 +359,7 @@ namespace Polymaker.SdvUI.Controls
                 //else
                 //    newValueRatio = (DragStart.X - ScrollbarTrackBounds.X + dragDelta.X) / (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Height);
 
-                Value = GetScrollValueAtPosition(e.DisplayLocation);
+                Value = GetScrollValueAtPosition(e.Location);
             }
         }
 

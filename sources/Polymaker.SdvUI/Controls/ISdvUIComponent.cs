@@ -16,7 +16,10 @@ namespace Polymaker.SdvUI.Controls
         int Height { get; set; }
         Point Size { get; set; }
         Rectangle Bounds { get; }
+        Rectangle ClientRectangle { get; }
+        Rectangle DisplayRectangle { get; }
         Rectangle GetDisplayRectangle();
+        Point PointToDisplay(Point localPoint);
         ISdvContainer Parent { get; }
         bool CaptureMouseWheel(int x, int y);
     }

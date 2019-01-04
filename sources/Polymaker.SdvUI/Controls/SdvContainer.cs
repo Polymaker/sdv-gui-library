@@ -12,9 +12,26 @@ namespace Polymaker.SdvUI.Controls
     public class SdvContainer : SdvControl, ISdvContainer, ISdvContainerCore
     {
         //private Point _ScrollOffset;
+        private Point _MinScrollSize;
 
         public Point ScrollSize { get; private set; }
-        
+
+        public Point MinScrollSize
+        {
+            get => _MinScrollSize;
+            set
+            {
+                value.X = value.X >= 0 ? value.X : 0;
+                value.Y = value.Y >= 0 ? value.Y : 0;
+                if (value != _MinScrollSize)
+                {
+                    _MinScrollSize = value;
+                    UpdateScrollBarsBounds();
+                }
+            }
+        }
+
+
         public SdvControlCollection Controls { get; }
 
         public Point ScrollOffset
@@ -85,7 +102,7 @@ namespace Polymaker.SdvUI.Controls
         #endregion
 
 
-        public Rectangle GetClientRectangle()
+        public override Rectangle GetClientRectangle()
         {
             return new Rectangle(Padding.Left, Padding.Top,
                 Width - Padding.Horizontal - (VScrollBarVisible ? VScrollBar.Width : 0),
@@ -126,6 +143,9 @@ namespace Polymaker.SdvUI.Controls
                 newSize.X += Padding.Horizontal;
                 newSize.Y += Padding.Vertical;
             }
+
+            newSize.X = Math.Max(newSize.X, MinScrollSize.X);
+            newSize.Y = Math.Max(newSize.Y, MinScrollSize.Y);
 
             if (newSize != ScrollSize)
             {
@@ -224,6 +244,11 @@ namespace Polymaker.SdvUI.Controls
         //    base.OnMouseUp(e);
         //}
 
+        public IEnumerable<SdvControl> GetVisibleControls()
+        {
+            return Controls.Where(c => c.Visible).Concat(ScrollBars.Where(s => s.Visible));
+        }
+
         public override bool CaptureMouseWheel(int x, int y)
         {
             foreach(var control in Controls)
@@ -257,12 +282,12 @@ namespace Polymaker.SdvUI.Controls
 
         public SdvControl GetControlAtPosition(int x, int y)
         {
-            return SdvForm.GetControlAtPosition(this, x, y);
+            return SdvContainerControl.GetControlAtPosition(this, x, y);
         }
 
         public SdvControl GetControlAtPosition(Point position)
         {
-            return SdvForm.GetControlAtPosition(this, position.X, position.Y);
+            return SdvContainerControl.GetControlAtPosition(this, position.X, position.Y);
         }
     }
 }

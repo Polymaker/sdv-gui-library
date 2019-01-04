@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Polymaker.SdvUI.Drawing;
 using Polymaker.SdvUI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
@@ -208,6 +209,60 @@ namespace Polymaker.SdvUI.Controls
                 //Utility.drawTextWithShadow(b, Text,
                 //    Font, new Vector2(bounds.Center.X, (bounds.Center.Y + 4)) - Game1.smallFont.MeasureString(Text) / 2f,
                 //    ForeColor, 1f, -1f, -1, -1, 0f, 3);
+            }
+        }
+
+        protected override void OnDraw2(SdvGraphics g)
+        {
+            var hasText = !string.IsNullOrEmpty(Text) && Font != null;
+            var hasImage = Image != null;
+            var hasBoth = hasText && hasImage;
+            var textSize = hasText ? Font.MeasureString(Text) : Vector2.Zero;
+            var textBounds = ClientRectangle;
+            var imageBounds = ClientRectangle;
+
+            if (hasBoth)
+            {
+                var sumW = Image.Size.X + textSize.X;
+                var sumH = Image.Size.Y + textSize.Y;
+
+                switch (TextImageRelation)
+                {
+                    case TextImageRelation.ImageAboveText:
+                    case TextImageRelation.TextAboveImage:
+                        float availableHeight = ClientRectangle.Height - TextImageSpacing;
+                        imageBounds.Height = (int)(availableHeight * (Image.Size.Y / sumH));
+                        textBounds.Height = (int)(availableHeight - imageBounds.Height);
+
+                        if (TextImageRelation == TextImageRelation.ImageAboveText)
+                            textBounds.Y = ClientRectangle.Bottom - textBounds.Height;
+                        else
+                            imageBounds.Y = ClientRectangle.Bottom - imageBounds.Height;
+                        break;
+                    case TextImageRelation.ImageBeforeText:
+                    case TextImageRelation.TextBeforeImage:
+                        float availableWidth = ClientRectangle.Width - TextImageSpacing;
+                        imageBounds.Width = (int)(availableWidth * (Image.Size.X / sumW));
+                        textBounds.Width = (int)(availableWidth - imageBounds.Width);
+
+                        if (TextImageRelation == TextImageRelation.ImageBeforeText)
+                            textBounds.X = ClientRectangle.Right - textBounds.Width;
+                        else
+                            imageBounds.X = ClientRectangle.Right - imageBounds.Width;
+                        break;
+                }
+            }
+
+            if (hasImage)
+            {
+                imageBounds = LayoutHelper.GetAlignedBounds(imageBounds, Image.Size, ImageAlign);
+                g.DrawImage(Image, imageBounds);
+            }
+
+            if (hasText)
+            {
+                textBounds = LayoutHelper.GetAlignedBounds(textBounds, textSize, TextAlign);
+                g.DrawString(Text, Font, ForeColor, textBounds);
             }
         }
     }

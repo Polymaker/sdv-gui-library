@@ -89,6 +89,10 @@ namespace Polymaker.SdvUI.Controls
 
         public Rectangle Bounds => new Rectangle(X, Y, Width, Height);
 
+        public Rectangle ClientRectangle => GetClientRectangle();
+
+        public Rectangle DisplayRectangle => GetDisplayRectangle();
+
         public Rectangle GetClientRectangle()
         {
             return new Rectangle(Padding.Left, Padding.Top, Width - Padding.Horizontal, Height - Padding.Vertical);
@@ -193,16 +197,34 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        private SdvControl HoveringControl;
+
         public override void performHoverAction(int x, int y)
         {
             base.performHoverAction(x, y);
+            SdvControl targetControl = null;
+
+            if (ActiveControl != null && Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton == ButtonState.Pressed)
+            {
+                targetControl = ActiveControl;
+            }
+            else
+            {
+                targetControl = GetControlAtPosition(x, y);
+            }
+
             var overControl = GetControlAtPosition(x, y);
 
-            if (overControl != null)
+            if (targetControl != null)
             {
+                //if (HoveringControl != null && HoveringControl != targetControl)
+                //{
+                    
+                //}
+                HoveringControl = targetControl;
                 var worldPoint = new Point(x, y);
-                var localPt = overControl.PointToLocal(worldPoint);
-                ((ISdvCoreEvents)overControl).OnMouseMove(new MouseEventArgs(localPt, worldPoint, MouseButtons.None));
+                var localPt = targetControl.PointToLocal(worldPoint);
+                ((ISdvCoreEvents)targetControl).OnMouseMove(new MouseEventArgs(localPt, worldPoint, MouseButtons.None));
             }
         }
 
@@ -229,34 +251,17 @@ namespace Polymaker.SdvUI.Controls
 
         public SdvControl GetControlAtPosition(int x, int y)
         {
-            return GetControlAtPosition(this, x, y);
+            return SdvContainerControl.GetControlAtPosition(this, x, y);
         }
 
         public SdvControl GetControlAtPosition(Point position)
         {
-            return GetControlAtPosition(this, position.X, position.Y);
+            return SdvContainerControl.GetControlAtPosition(this, position.X, position.Y);
         }
 
-        internal static SdvControl GetControlAtPosition(ISdvContainer container, int x, int y)
+        public IEnumerable<SdvControl> GetVisibleControls()
         {
-            var controls = (container is ISdvContainerCore cc) ? cc.AllControls : container.Controls;
-
-            foreach (var ctrl in controls)
-            {
-                if (ctrl.Visible && ctrl.GetDisplayRectangle().Contains(x, y))
-                {
-                    if (ctrl is ISdvContainer childContainer)
-                        return GetControlAtPosition(childContainer, x, y);
-
-                    return ctrl;
-                }
-            }
-
-            if (container is SdvControl control)
-                return control;
-
-            return null;
+            return Controls.Where(c => c.Visible);
         }
-
     }
 }

@@ -62,33 +62,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ContentAlignment.cs" />
+    <Compile Include="Controls\IScrollableContainer.cs" />
+    <Compile Include="Drawing\ContentAlignment.cs" />
     <Compile Include="ControlBounds.cs" />
     <Compile Include="Controls\ControlsChangedEventArgs.cs" />
-    <Compile Include="Controls\ISdvContainerCore.cs" />
     <Compile Include="Controls\ISdvUIComponent.cs" />
     <Compile Include="Controls\ISdvCoreEvents.cs" />
     <Compile Include="Controls\SdvButton.cs" />
     <Compile Include="Controls\SdvContainerControl.cs" />
-    <Compile Include="Controls\SdvFont.cs" />
+    <Compile Include="Drawing\SdvFont.cs" />
     <Compile Include="Controls\SdvGameMenuForm.cs" />
     <Compile Include="Controls\SdvScrollableControl.cs" />
     <Compile Include="Controls\SdvScrollBar.cs" />
     <Compile Include="Controls\ISdvContainer.cs" />
+    <Compile Include="Drawing\SdvGraphics.cs" />
     <Compile Include="MouseButtons.cs" />
     <Compile Include="MouseEventArgs.cs" />
-    <Compile Include="Orientation.cs" />
+    <Compile Include="Drawing\Orientation.cs" />
     <Compile Include="Padding.cs" />
     <Compile Include="Controls\SdvControlCollection.cs" />
     <Compile Include="Controls\SdvForm.cs" />
     <Compile Include="Controls\SdvLabel.cs" />
-    <Compile Include="Controls\SdvContainer.cs" />
     <Compile Include="Controls\SdvControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SdvImage.cs" />
+    <Compile Include="Drawing\SdvImage.cs" />
     <Compile Include="SdvMouseEventArgs.cs" />
-    <Compile Include="TextImageRelation.cs" />
-    <Compile Include="Utilities\DrawingExtensions.cs" />
+    <Compile Include="Drawing\TextImageRelation.cs" />
+    <Compile Include="Drawing\DrawingExtensions.cs" />
     <Compile Include="Utilities\GraphicClip.cs" />
     <Compile Include="Utilities\LayoutHelper.cs" />
   </ItemGroup>
