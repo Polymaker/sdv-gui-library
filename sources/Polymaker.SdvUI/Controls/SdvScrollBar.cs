@@ -252,8 +252,10 @@ namespace Polymaker.SdvUI.Controls
             }
             else
             {
-                g.DrawImageRotated(SdvImages.UpArrow, UpArrowBounds, -3.14f / 2f, Color.White, 4f);
-                g.DrawImageRotated(SdvImages.DownArrow, DownArrowBounds, -3.14f / 2f, Color.White, 4f);
+                g.DrawImage(SdvImages.LeftArrow, UpArrowBounds, Value > 0 ? Color.White : Color.Gray, 4f);
+                g.DrawImage(SdvImages.RightArrow, DownArrowBounds, Value < MaxValue ? Color.White : Color.Gray, 4f);
+                //g.DrawImageRotated(SdvImages.UpArrow, UpArrowBounds, -3.14f / 2f, Color.White, 4f);
+                //g.DrawImageRotated(SdvImages.DownArrow, DownArrowBounds, -3.14f / 2f, Color.White, 4f);
                 g.DrawImage(SdvImages.HScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
             }
         }

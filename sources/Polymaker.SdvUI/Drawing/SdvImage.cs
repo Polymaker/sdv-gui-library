@@ -28,6 +28,24 @@ namespace Polymaker.SdvUI
 
         public Vector2 Size => SourceSize * Scale;
         
+        public static SdvImage GetItemImage(StardewValley.Object item, float scale = 1f)
+        {
+            Rectangle imageSourceRect;
+            Texture2D imageTexture;
+
+            if (item.bigCraftable.Value)
+            {
+                imageSourceRect = StardewValley.Object.getSourceRectForBigCraftable(item.ParentSheetIndex);
+                imageTexture = Game1.bigCraftableSpriteSheet;
+            }
+            else
+            {
+                imageSourceRect = Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, item.ParentSheetIndex, 16, 16);
+                imageTexture = Game1.objectSpriteSheet;
+            }
+
+            return new SdvImage(imageTexture, imageSourceRect, scale);
+        }
     }
 
     public static class SdvImages
@@ -49,6 +67,10 @@ namespace Polymaker.SdvUI
         public static SdvImage UpArrow => new SdvImage(Game1.mouseCursors, new Rectangle(421, 459, 11, 12));
 
         public static SdvImage DownArrow => new SdvImage(Game1.mouseCursors, new Rectangle(421, 472, 11, 12));
+
+        public static SdvImage LeftArrow => new SdvImage(Game1.mouseCursors, new Rectangle(352, 495, 12, 11));
+
+        public static SdvImage RightArrow => new SdvImage(Game1.mouseCursors, new Rectangle(365, 495, 12, 11));
 
         public static SdvImage VScrollbarButton => new SdvImage(Game1.mouseCursors, new Rectangle(435, 463, 6, 10));
 

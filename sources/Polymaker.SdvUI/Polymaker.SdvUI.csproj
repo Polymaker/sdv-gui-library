@@ -62,7 +62,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\GridControl\SdvGridControl.cs" />
     <Compile Include="Controls\IScrollableContainer.cs" />
+    <Compile Include="Controls\SdvCheckbox.cs" />
     <Compile Include="Drawing\ContentAlignment.cs" />
     <Compile Include="Drawing\ControlBounds.cs" />
     <Compile Include="Controls\Events\ControlsChangedEventArgs.cs" />
