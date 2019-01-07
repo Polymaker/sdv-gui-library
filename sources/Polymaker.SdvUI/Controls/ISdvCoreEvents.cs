@@ -12,6 +12,7 @@ namespace Polymaker.SdvUI.Controls
         void OnMouseDown(MouseEventArgs e);
         void OnMouseUp(MouseEventArgs e);
         void OnMouseMove(MouseEventArgs e);
-        void OnScrollWheel(int delta);
+        bool HandleScrollWheel(MouseEventArgs data);
+        bool ForwardScrollWheel(MouseEventArgs data);
     }
 }

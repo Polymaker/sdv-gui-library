@@ -64,8 +64,8 @@
   <ItemGroup>
     <Compile Include="Controls\IScrollableContainer.cs" />
     <Compile Include="Drawing\ContentAlignment.cs" />
-    <Compile Include="ControlBounds.cs" />
-    <Compile Include="Controls\ControlsChangedEventArgs.cs" />
+    <Compile Include="Drawing\ControlBounds.cs" />
+    <Compile Include="Controls\Events\ControlsChangedEventArgs.cs" />
     <Compile Include="Controls\ISdvUIComponent.cs" />
     <Compile Include="Controls\ISdvCoreEvents.cs" />
     <Compile Include="Controls\SdvButton.cs" />
@@ -76,17 +76,17 @@
     <Compile Include="Controls\SdvScrollBar.cs" />
     <Compile Include="Controls\ISdvContainer.cs" />
     <Compile Include="Drawing\SdvGraphics.cs" />
-    <Compile Include="MouseButtons.cs" />
-    <Compile Include="MouseEventArgs.cs" />
+    <Compile Include="Controls\Events\MouseButtons.cs" />
+    <Compile Include="Controls\Events\MouseEventArgs.cs" />
     <Compile Include="Drawing\Orientation.cs" />
-    <Compile Include="Padding.cs" />
+    <Compile Include="Drawing\Padding.cs" />
     <Compile Include="Controls\SdvControlCollection.cs" />
     <Compile Include="Controls\SdvForm.cs" />
     <Compile Include="Controls\SdvLabel.cs" />
     <Compile Include="Controls\SdvControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Drawing\SdvImage.cs" />
-    <Compile Include="SdvMouseEventArgs.cs" />
+    <Compile Include="Controls\Events\SdvMouseEventArgs.cs" />
     <Compile Include="Drawing\TextImageRelation.cs" />
     <Compile Include="Drawing\DrawingExtensions.cs" />
     <Compile Include="Utilities\GraphicClip.cs" />

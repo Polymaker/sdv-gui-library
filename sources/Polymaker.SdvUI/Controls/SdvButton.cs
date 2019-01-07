@@ -17,15 +17,9 @@ namespace Polymaker.SdvUI.Controls
             Padding = new Padding(16, 8, 16, 8);
         }
 
-        protected override void OnDrawBackground(SpriteBatch b)
+        protected override void OnDrawBackground(SdvGraphics g)
         {
-            base.OnDrawBackground(b);
-            b.DrawTextureBox(SdvImages.ButtonTexture, GetDisplayRectangle(), Color.White, 4f);
-        }
-
-        protected override void OnDrawBackground2(SdvGraphics g)
-        {
-            base.OnDrawBackground2(g);
+            base.OnDrawBackground(g);
             g.DrawTextureBox(SdvImages.ButtonTexture, new Rectangle(0, 0, Width, Height), Color.White, 4f);
         }
     }

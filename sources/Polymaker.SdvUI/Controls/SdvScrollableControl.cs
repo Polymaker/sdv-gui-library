@@ -90,6 +90,18 @@ namespace Polymaker.SdvUI.Controls
             ScrollChangedCore();
         }
 
+        public override bool ForwardScrollWheel(MouseEventArgs data)
+        {
+            var baseResult = base.ForwardScrollWheel(data);
+
+            if (!baseResult && VScrollVisible && DisplayRectangle.Contains(data.DisplayLocation))
+            {
+                VScrollBar.PerformScrollWheel(data.Delta);
+                return true;
+            }
+            return baseResult;
+        }
+
         public override Rectangle GetClientRectangle()
         {
             return new Rectangle(Padding.Left, Padding.Top,
@@ -179,9 +191,9 @@ namespace Polymaker.SdvUI.Controls
             return base.GetVisibleControls().Concat(ScrollBars.Where(s => s.Visible));
         }
 
-        protected override void OnDraw2(SdvGraphics g)
+        protected override void OnDraw(SdvGraphics g)
         {
-            base.OnDraw2(g);
+            base.OnDraw(g);
             var displayRect = DisplayRectangle;
             displayRect.Width -= VScrollVisible ? VScrollBar.Width : 0;
             displayRect.Height -= HScrollVisible ? HScrollBar.Height : 0;

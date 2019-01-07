@@ -148,71 +148,8 @@ namespace Polymaker.SdvUI.Controls
 
             return new Point((int)prefSize.X, (int)prefSize.Y);
         }
-
-        protected override void OnDraw(SpriteBatch b)
-        {
-            base.OnDraw(b);
-            var bounds = GetDisplayRectangle();
-
-            var innerBounds = new Rectangle(bounds.X + Padding.Left, bounds.Y + Padding.Top, Width - Padding.Horizontal, Height - Padding.Vertical);
-
-            var hasText = !string.IsNullOrEmpty(Text) && Font != null;
-            var hasImage = Image != null;
-            var hasBoth = hasText && hasImage;
-            var textSize = hasText ? Font.MeasureString(Text) : Vector2.Zero;
-            var textBounds = innerBounds;
-            var imageBounds = innerBounds;
-
-            if (hasBoth)
-            {
-                var sumW = Image.Size.X + textSize.X;
-                var sumH = Image.Size.Y + textSize.Y;
-
-                switch (TextImageRelation)
-                {
-                    case TextImageRelation.ImageAboveText:
-                    case TextImageRelation.TextAboveImage:
-                        float availableHeight = innerBounds.Height - TextImageSpacing;
-                        imageBounds.Height = (int)(availableHeight * (Image.Size.Y / sumH));
-                        textBounds.Height = (int)(availableHeight - imageBounds.Height);
-
-                        if (TextImageRelation == TextImageRelation.ImageAboveText)
-                            textBounds.Y = innerBounds.Bottom - textBounds.Height;
-                        else
-                            imageBounds.Y = innerBounds.Bottom - imageBounds.Height;
-                        break;
-                    case TextImageRelation.ImageBeforeText:
-                    case TextImageRelation.TextBeforeImage:
-                        float availableWidth = innerBounds.Width - TextImageSpacing;
-                        imageBounds.Width = (int)(availableWidth * (Image.Size.X / sumW));
-                        textBounds.Width = (int)(availableWidth - imageBounds.Width);
-
-                        if (TextImageRelation == TextImageRelation.ImageBeforeText)
-                            textBounds.X = innerBounds.Right - textBounds.Width;
-                        else
-                            imageBounds.X = innerBounds.Right - imageBounds.Width;
-                        break;
-                }
-            }
-
-            if (hasImage)
-            {
-                imageBounds = LayoutHelper.GetAlignedBounds(imageBounds, Image.Size, ImageAlign);
-                b.DrawImage(Image, imageBounds);
-            }
-
-            if (hasText)
-            {
-                textBounds = LayoutHelper.GetAlignedBounds(textBounds, textSize, TextAlign);
-                //b.DrawString(Font.Sprite, Text, new Vector2(textBounds.X, textBounds.Y + 4), ForeColor);
-                b.DrawString(Text, Font, ForeColor, textBounds);
-                //Utility.drawTextWithShadow(b, Text,
-                //    Font, new Vector2(bounds.Center.X, (bounds.Center.Y + 4)) - Game1.smallFont.MeasureString(Text) / 2f,
-                //    ForeColor, 1f, -1f, -1, -1, 0f, 3);
-            }
-        }
-
-        protected override void OnDraw2(SdvGraphics g)
+        
+        protected override void OnDraw(SdvGraphics g)
         {
             var hasText = !string.IsNullOrEmpty(Text) && Font != null;
             var hasImage = Image != null;

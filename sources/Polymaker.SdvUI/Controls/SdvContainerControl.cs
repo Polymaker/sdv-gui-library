@@ -31,6 +31,28 @@ namespace Polymaker.SdvUI.Controls
             return GetControlAtPosition(this, position.X, position.Y, localPoint);
         }
 
+        public override bool ForwardScrollWheel(MouseEventArgs data)
+        {
+            var localPt = PointToLocal(data.DisplayLocation);
+
+            if (ClientRectangle.Contains(localPt))
+            {
+                foreach (var control in GetVisibleControls())
+                {
+                    var localData = data.ToLocal(control);
+                    if (control.HandleScrollWheel(localData))
+                    {
+                        control.PerformScrollWheel(data.Delta);
+                        break;
+                    }
+                    else if (control.ForwardScrollWheel(localData))
+                        break;
+                }
+            }
+ 
+            return base.ForwardScrollWheel(data);
+        }
+
         internal static SdvControl GetControlAtPosition(ISdvContainer container, int x, int y, bool localPoint = false)
         {
             if (localPoint)

@@ -90,6 +90,8 @@ namespace Polymaker.SdvUI.Controls
 
         public bool WheelScrollLarge { get; set; }
 
+        public string ButtonClickSound { get; set; }
+
         public event EventHandler Scroll;
 
         public SdvScrollBar(Orientation orientation)
@@ -236,33 +238,10 @@ namespace Polymaker.SdvUI.Controls
                 ScrollbarButtonBounds.X += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Width));
             }
         }
-
-        protected override void OnDraw(SpriteBatch b)
+        
+        protected override void OnDraw(SdvGraphics g)
         {
-            base.OnDraw(b);
-
-            UpdateScrollbarBounds_Old();
-            //var bound = DisplayBounds;
-
-            b.DrawTextureBox(SdvImages.ScrollBarTrack, ScrollbarTrackBounds, Color.White, 4f, true);
-
-            if (Orientation == Orientation.Vertical)
-            {
-                b.DrawImage(SdvImages.UpArrow, UpArrowBounds, 4f);
-                b.DrawImage(SdvImages.DownArrow, DownArrowBounds, 4f);
-                b.DrawImage(SdvImages.VScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
-            }
-            else
-            {
-                b.DrawImageRotated(SdvImages.UpArrow, UpArrowBounds, -3.14f / 2f, Color.White, 4f);
-                b.DrawImageRotated(SdvImages.DownArrow, DownArrowBounds, -3.14f / 2f, Color.White, 4f);
-                b.DrawImage(SdvImages.HScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
-            }
-        }
-
-        protected override void OnDraw2(SdvGraphics g)
-        {
-            base.OnDraw2(g);
+            base.OnDraw(g);
             g.DrawTextureBox(SdvImages.ScrollBarTrack, ScrollbarTrackBounds, Color.White, 4f, true);
 
             if (Orientation == Orientation.Vertical)
@@ -282,17 +261,23 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left && Enabled)
             {
                 if (UpArrowBounds.Contains(e.Location))
                 {
                     if (Value > 0)
+                    {
                         Value -= LargeChange;
+                        PlayButtonClickSound();
+                    }
                 }
                 else if (DownArrowBounds.Contains(e.Location))
                 {
                     if (Value < MaxValue)
+                    {
                         Value += LargeChange;
+                        PlayButtonClickSound();
+                    }
                 }
                 else if (ScrollbarTrackBounds.Contains(e.Location))
                 {
@@ -303,21 +288,15 @@ namespace Polymaker.SdvUI.Controls
         }
 
         private bool MouseDragging = false;
-        //private Vector2 DragStart;
-        //private int DragStartValue;
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left && Enabled)
             {
-                //var displayPt = PointToDisplay(e.Location);
                 if (ScrollbarButtonBounds.Contains(e.Location))
                 {
                     MouseDragging = true;
-                    //DragStartValue = Value;
-                    //var worldPos = PointToDisplay(e.Location);
-                    //DragStart = new Vector2(worldPos.X, worldPos.Y);
                 }
             }
         }
@@ -335,13 +314,15 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnScrollWheel(int delta)
         {
             base.OnScrollWheel(delta);
-            
-            Value += (WheelScrollLarge ? LargeChange : SmallChange) * Math.Sign(delta) * -1;
+            if (Enabled)
+            {
+                Value += (WheelScrollLarge ? LargeChange : SmallChange) * Math.Sign(delta) * -1;
+            }
         }
 
-        public override bool CaptureMouseWheel(int x, int y)
+        public override bool HandleScrollWheel(MouseEventArgs data)
         {
-            return Bounds.Contains(x, y);
+            return Enabled && Visible && DisplayRectangle.Contains(data.DisplayLocation);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -379,22 +360,15 @@ namespace Polymaker.SdvUI.Controls
             return scrollValue;
         }
 
-        //protected override void OnUpdate(GameTime delta)
-        //{
-        //    base.OnUpdate(delta);
-        //    if (MouseDragging)
-        //    {
-        //        var curPos = new Vector2(Cursor.X, Cursor.Y);
-        //        var dragDelta = curPos - DragStart;
-        //        var newValueRatio = 0f;
+        #region Sounds
 
-        //        if (Orientation == Orientation.Vertical)
-        //            newValueRatio = (DragStart.Y - ScrollbarTrackBounds.Y + dragDelta.Y) / (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height);
-        //        else
-        //            newValueRatio = (DragStart.X - ScrollbarTrackBounds.X + dragDelta.X) / (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Height);
+        private void PlayButtonClickSound()
+        {
+            if(!string.IsNullOrEmpty(ButtonClickSound))
+                StardewValley.Game1.playSound(ButtonClickSound);
+        }
+        
 
-        //        Value = (int)(newValueRatio * MaxValue);
-        //    }
-        //}
+        #endregion
     }
 }

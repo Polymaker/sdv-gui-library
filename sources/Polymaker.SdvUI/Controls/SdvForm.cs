@@ -204,7 +204,7 @@ namespace Polymaker.SdvUI.Controls
             base.performHoverAction(x, y);
             SdvControl targetControl = null;
 
-            if (ActiveControl != null && Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton == ButtonState.Pressed)
+            if (ActiveControl != null && Cursor.LeftButton == ButtonState.Pressed)
             {
                 targetControl = ActiveControl;
             }
@@ -231,18 +231,22 @@ namespace Polymaker.SdvUI.Controls
         public override void receiveScrollWheelAction(int direction)
         {
             base.receiveScrollWheelAction(direction);
-            var cursorPos = new Point(Cursor.X, Cursor.Y);
+            var curMouse = Cursor;
+            var scrolldata = new MouseEventArgs(Cursor, direction);
 
-            foreach (var control in Controls)
+            foreach (var control in GetVisibleControls())
             {
-                var localPt = control.PointToLocal(cursorPos);
-
-                if (control.Visible && control.CaptureMouseWheel(localPt.X, localPt.Y))
-                    ((ISdvCoreEvents)control).OnScrollWheel(direction);
+                if (control.HandleScrollWheel(scrolldata))
+                {
+                    control.PerformScrollWheel(scrolldata.Delta);
+                    break;
+                }
+                else if (control.ForwardScrollWheel(scrolldata))
+                    break;
             }
         }
 
-        public virtual bool CaptureMouseWheel(int x, int y)
+        public virtual bool CaptureMouseWheel(Point mousePosition)
         {
             return false;
         }

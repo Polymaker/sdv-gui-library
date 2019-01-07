@@ -391,7 +391,6 @@ namespace Polymaker.SdvUI.Controls
         public event EventHandler<MouseEventArgs> MouseMove;
         public event EventHandler<int> ScrollWheel;
 
-
         protected virtual void OnMouseDown(MouseEventArgs e)
         {
             MouseDown?.Invoke(this, e);
@@ -417,9 +416,19 @@ namespace Polymaker.SdvUI.Controls
             ScrollWheel?.Invoke(this, delta);
         }
 
-        public virtual bool CaptureMouseWheel(int x, int y)
+        public virtual bool HandleScrollWheel(MouseEventArgs data)
         {
             return false;
+        }
+
+        public virtual bool ForwardScrollWheel(MouseEventArgs data)
+        {
+            return false;
+        }
+
+        internal void PerformScrollWheel(int delta)
+        {
+            OnScrollWheel(delta);
         }
 
         #endregion
@@ -449,53 +458,28 @@ namespace Polymaker.SdvUI.Controls
         {
             OnMouseMove(e);
         }
-
-        void ISdvCoreEvents.OnScrollWheel(int delta)
-        {
-            OnScrollWheel(delta);
-        }
-
         #endregion
 
-        protected virtual void OnDrawBackground(SpriteBatch b)
-        {
-            if (BackColor != Color.Transparent)
-                b.Draw(Game1.staminaRect, GetDisplayRectangle(), BackColor);
-        }
-
-        protected virtual void OnDraw(SpriteBatch b)
-        {
-
-        }
-
-        protected virtual void OnDrawBackground2(SdvGraphics g)
+        protected virtual void OnDrawBackground(SdvGraphics g)
         {
             if (BackColor != Color.Transparent)
                 g.FillRect(BackColor, Bounds);
         }
 
-        protected virtual void OnDraw2(SdvGraphics g)
+        protected virtual void OnDraw(SdvGraphics g)
         {
 
         }
 
         internal void PerformDraw(SpriteBatch b)
         {
-            using (var g = new SdvGraphics(b, DisplayRectangle.Location))
-                PerformDraw(g);
-
-            //if (Width > 0 && Height > 0)
-            //{
-            //    OnDrawBackground(b);
-            //    OnDraw(b);
-            //}
-        }
-        internal void PerformDraw(SdvGraphics g)
-        {
             if (Width > 0 && Height > 0)
             {
-                OnDrawBackground2(g);
-                OnDraw2(g);
+                using (var g = new SdvGraphics(b, DisplayRectangle.Location))
+                {
+                    OnDrawBackground(g);
+                    OnDraw(g);
+                }
             }
         }
     }
