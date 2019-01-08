@@ -20,7 +20,16 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnDrawBackground(SdvGraphics g)
         {
             base.OnDrawBackground(g);
-            g.DrawTextureBox(SdvImages.ButtonTexture, new Rectangle(0, 0, Width, Height), Color.White, 4f);
+
+            var mouseOver = DisplayRectangle.Contains(CursorPosition);
+            var pressed = Focused && Cursor.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            var imgColor = (pressed || !Enabled) ? new Color(110, 110, 110) : (mouseOver ? Color.LightGray : Color.White);
+
+            g.DrawTextureBox(
+                SdvImages.ButtonTexture, 
+                DisplayRectangle,
+                imgColor, 
+                4f);
         }
     }
 }

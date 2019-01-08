@@ -82,7 +82,7 @@ namespace Polymaker.SdvUI.Controls
 
             foreach (var ctrl in container.GetVisibleControls())
             {
-                if (ctrl.Visible && ctrl.DisplayRectangle.Contains(x, y) && (pointInClient || !container.Controls.Contains(ctrl)))
+                if (ctrl.Visible && ctrl.ScreenBounds.Contains(x, y) && (pointInClient || !container.Controls.Contains(ctrl)))
                 {
                     if (ctrl is ISdvContainer childContainer)
                         return GetControlAtPosition(childContainer, x, y);

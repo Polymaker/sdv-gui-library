@@ -241,24 +241,24 @@ namespace Polymaker.SdvUI.Controls
 
             if (Orientation == Orientation.Vertical)
             {
-                g.DrawImage(SdvImages.UpArrow, UpArrowBounds, Value > 0 ? Color.White : Color.Gray, 4f);
-                g.DrawImage(SdvImages.DownArrow, DownArrowBounds, Value < MaxValue ? Color.White : Color.Gray, 4f);
-                g.DrawImage(SdvImages.VScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
+                g.DrawImage(SdvImages.UpArrow, UpArrowBounds, Value > 0 ? Color.White : Color.Gray);
+                g.DrawImage(SdvImages.DownArrow, DownArrowBounds, Value < MaxValue ? Color.White : Color.Gray);
+                g.DrawImage(SdvImages.VScrollbarButton, ScrollbarButtonBounds, Color.White, false);
             }
             else
             {
-                g.DrawImage(SdvImages.LeftArrow, UpArrowBounds, Value > 0 ? Color.White : Color.Gray, 4f);
-                g.DrawImage(SdvImages.RightArrow, DownArrowBounds, Value < MaxValue ? Color.White : Color.Gray, 4f);
+                g.DrawImage(SdvImages.LeftArrow, UpArrowBounds, Value > 0 ? Color.White : Color.Gray);
+                g.DrawImage(SdvImages.RightArrow, DownArrowBounds, Value < MaxValue ? Color.White : Color.Gray);
                 //g.DrawImageRotated(SdvImages.UpArrow, UpArrowBounds, -3.14f / 2f, Color.White, 4f);
                 //g.DrawImageRotated(SdvImages.DownArrow, DownArrowBounds, -3.14f / 2f, Color.White, 4f);
-                g.DrawImage(SdvImages.HScrollbarButton, ScrollbarButtonBounds, Color.White, 4f, false);
+                g.DrawImage(SdvImages.HScrollbarButton, ScrollbarButtonBounds, Color.White, false);
             }
         }
 
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (e.Button == MouseButtons.Left && Enabled)
+            if (e.Buttons == MouseButtons.Left && Enabled)
             {
                 if (UpArrowBounds.Contains(e.Location))
                 {
@@ -296,7 +296,7 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Button == MouseButtons.Left && Enabled)
+            if (e.Buttons == MouseButtons.Left && Enabled)
             {
                 if (ScrollbarButtonBounds.Contains(e.Location))
                 {
@@ -309,7 +309,7 @@ namespace Polymaker.SdvUI.Controls
         {
             base.OnMouseUp(e);
 
-            if(e.Button == MouseButtons.Left && MouseDragging)
+            if(e.Buttons == MouseButtons.Left && MouseDragging)
             {
                 MouseDragging = false;
             }
@@ -330,7 +330,7 @@ namespace Polymaker.SdvUI.Controls
 
         public override bool HandleScrollWheel(MouseEventArgs data)
         {
-            return Enabled && Visible && DisplayRectangle.Contains(data.DisplayLocation);
+            return Enabled && Visible && ScreenBounds.Contains(data.DisplayLocation);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

@@ -48,10 +48,20 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        public int TextImageSpacing { get; set; } = 8;
+        private int _TextImageSpacing = 8;
 
-        public event EventHandler AutoSizeChanged;
-        public event EventHandler TextImageRelationChanged;
+        public int TextImageSpacing
+        {
+            get => _TextImageSpacing;
+            set
+            {
+                if (value != _TextImageSpacing)
+                {
+                    _TextImageSpacing = value;
+                    AdjustSizeIfNeeded();
+                }
+            }
+        }
 
         public SdvImage Image
         {
@@ -66,9 +76,14 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        public bool DrawShadow { get; set; }
+        public Color DisabledForeColor { get; set; } = new Color(105, 105, 105);
 
-        public float TextureScale { get; set; } = 4f;
+        //public bool DrawShadow { get => Font?.DrawShadow ?? false; set { if (Font != null) Font.DrawShadow = value; } }
+
+        //public float TextureScale { get; set; } = 4f;
+
+        public event EventHandler AutoSizeChanged;
+        public event EventHandler TextImageRelationChanged;
 
         public SdvLabel()
         {
@@ -199,7 +214,7 @@ namespace Polymaker.SdvUI.Controls
             if (hasText)
             {
                 textBounds = LayoutHelper.GetAlignedBounds(textBounds, textSize, TextAlign);
-                g.DrawString(Text, Font, Enabled ? ForeColor : Color.DarkGray, textBounds);
+                g.DrawString(Text, Font, Enabled ? ForeColor : DisabledForeColor, textBounds);
             }
         }
     }

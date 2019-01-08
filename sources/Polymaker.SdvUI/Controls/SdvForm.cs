@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Polymaker.SdvUI.Controls.Events;
 using Polymaker.SdvUI.Utilities;
 using StardewValley.Menus;
 using System;
@@ -15,8 +16,10 @@ namespace Polymaker.SdvUI.Controls
     {
         private Padding _Padding = Padding.Empty;
         private Point _ScrollOffset;
+        private SdvWindowEventRouter EventManager;
 
-        public SdvControl ActiveControl { get; private set; }
+        public SdvControl ActiveControl => EventManager.ActiveControl;
+        public SdvControl HoveringControl => EventManager.HoveringControl;
 
         public SdvControlCollection Controls { get; }
 
@@ -24,7 +27,7 @@ namespace Polymaker.SdvUI.Controls
 
         public bool Visible { get; set; } = true;
 
-        public MouseState Cursor => Mouse.GetState();
+        public MouseState Cursor => EventManager.LastMouseState;
 
         public int X
         {
@@ -95,7 +98,9 @@ namespace Polymaker.SdvUI.Controls
 
         public Rectangle ClientRectangle => GetClientRectangle();
 
-        public Rectangle DisplayRectangle => GetDisplayRectangle();
+        public Rectangle DisplayRectangle => new Rectangle(0, 0, Width, Height);
+
+        public Rectangle ScreenBounds => GetDisplayRectangle();
 
         public Rectangle GetClientRectangle()
         {
@@ -107,18 +112,6 @@ namespace Polymaker.SdvUI.Controls
             return Bounds;
         }
 
-        public Point ScrollOffset
-        {
-            get => _ScrollOffset;
-            set
-            {
-                if (value != _ScrollOffset)
-                {
-                    _ScrollOffset = value;
-                }
-            }
-        }
-
         public ISdvContainer Parent => null;
 
         public static readonly Padding GameMenuPadding = new Padding(16, 80, 16, 16);
@@ -128,12 +121,14 @@ namespace Polymaker.SdvUI.Controls
         public SdvForm()
         {
             Controls = new SdvControlCollection(this);
+            EventManager = new SdvWindowEventRouter(this);
             _ScrollOffset = Point.Zero;
         }
 
         public SdvForm(int x, int y, int width, int height, bool showUpperRightCloseButton = false) : base(x, y, width, height, showUpperRightCloseButton)
         {
             Controls = new SdvControlCollection(this);
+            EventManager = new SdvWindowEventRouter(this);
             _ScrollOffset = Point.Zero;
         }
 
@@ -146,21 +141,6 @@ namespace Polymaker.SdvUI.Controls
                 if(control.Visible)
                     control.PerformDraw(b);
             }
-
-            //using (var clip = new GraphicClip(b, GetDisplayRectangle()))
-            //{
-            //    foreach (var control in Controls)
-            //    {
-            //        if(!(control is ISdvContainer))
-            //            control.PerformDraw(b);
-            //    }
-            //}
-
-            //foreach (var control in Controls)
-            //{
-            //    if (control is ISdvContainer)
-            //        control.PerformDraw(b);
-            //}
         }
 
         public Point PointToDisplay(Point localPoint)
@@ -180,79 +160,89 @@ namespace Polymaker.SdvUI.Controls
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
             base.receiveLeftClick(x, y, playSound);
-            ActiveControl = GetControlAtPosition(x, y);
+            EventManager.ReceiveLeftClick(x, y);
+            //ActiveControl = GetControlAtPosition(x, y);
 
-            if (ActiveControl != null)
-            {
-                var worldPoint = new Point(x, y);
-                var localPt = ActiveControl.PointToLocal(worldPoint);
-                ((ISdvCoreEvents)ActiveControl).OnMouseDown(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
-            }
+            //if (ActiveControl != null)
+            //{
+            //    var worldPoint = new Point(x, y);
+            //    var localPt = ActiveControl.PointToLocal(worldPoint);
+            //    ((ISdvCoreEvents)ActiveControl).OnMouseDown(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
+            //}
+        }
+
+        public override void leftClickHeld(int x, int y)
+        {
+            base.leftClickHeld(x, y);
+            EventManager.LeftClickHeld(x, y);
         }
 
         public override void releaseLeftClick(int x, int y)
         {
             base.releaseLeftClick(x, y);
-            if (ActiveControl != null)
-            {
-                var worldPoint = new Point(x, y);
-                var localPt = ActiveControl.PointToLocal(worldPoint);
-                ((ISdvCoreEvents)ActiveControl).OnMouseUp(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
-            }
+            EventManager.ReleaseLeftClick(x, y);
+            //if (ActiveControl != null)
+            //{
+            //    var worldPoint = new Point(x, y);
+            //    var localPt = ActiveControl.PointToLocal(worldPoint);
+            //    ((ISdvCoreEvents)ActiveControl).OnMouseUp(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
+            //}
         }
 
-        private SdvControl HoveringControl;
+        public override void receiveRightClick(int x, int y, bool playSound = true)
+        {
+            base.receiveRightClick(x, y, playSound);
+            EventManager.ReleaseRightClick(x, y);
+        }
 
         public override void performHoverAction(int x, int y)
         {
             base.performHoverAction(x, y);
-            SdvControl targetControl = null;
+            EventManager.PerformHoverAction(x, y);
+            //SdvControl targetControl = null;
 
-            if (ActiveControl != null && Cursor.LeftButton == ButtonState.Pressed)
-            {
-                targetControl = ActiveControl;
-            }
-            else
-            {
-                targetControl = GetControlAtPosition(x, y);
-            }
+            //if (ActiveControl != null && Cursor.LeftButton == ButtonState.Pressed)
+            //{
+            //    targetControl = ActiveControl;
+            //}
+            //else
+            //{
+            //    targetControl = GetControlAtPosition(x, y);
+            //}
 
-            var overControl = GetControlAtPosition(x, y);
+            //var overControl = GetControlAtPosition(x, y);
 
-            if (targetControl != null)
-            {
-                //if (HoveringControl != null && HoveringControl != targetControl)
-                //{
+            //if (targetControl != null)
+            //{
+            //    //if (HoveringControl != null && HoveringControl != targetControl)
+            //    //{
                     
-                //}
-                HoveringControl = targetControl;
-                var worldPoint = new Point(x, y);
-                var localPt = targetControl.PointToLocal(worldPoint);
-                ((ISdvCoreEvents)targetControl).OnMouseMove(new MouseEventArgs(localPt, worldPoint, MouseButtons.None));
-            }
+            //    //}
+            //    HoveringControl = targetControl;
+            //    var worldPoint = new Point(x, y);
+            //    var localPt = targetControl.PointToLocal(worldPoint);
+            //    ((ISdvCoreEvents)targetControl).OnMouseMove(new MouseEventArgs(localPt, worldPoint, MouseButtons.None));
+            //}
         }
 
         public override void receiveScrollWheelAction(int direction)
         {
             base.receiveScrollWheelAction(direction);
-            var curMouse = Cursor;
-            var scrolldata = new MouseEventArgs(Cursor, direction);
+            EventManager.ReceiveScrollWheelAction(direction);
 
-            foreach (var control in GetVisibleControls())
-            {
-                if (control.HandleScrollWheel(scrolldata))
-                {
-                    control.PerformScrollWheel(scrolldata.Delta);
-                    break;
-                }
-                else if (control.ForwardScrollWheel(scrolldata))
-                    break;
-            }
-        }
+            //var curMouse = Cursor;
+            //var scrolldata = new MouseEventArgs(Cursor, direction);
 
-        public virtual bool CaptureMouseWheel(Point mousePosition)
-        {
-            return false;
+            //foreach (var control in GetVisibleControls())
+            //{
+            //    if (control.HandleScrollWheel(scrolldata))
+            //    {
+            //        control.PerformScrollWheel(scrolldata.Delta);
+            //        break;
+            //    }
+            //    else if (control.ForwardScrollWheel(scrolldata))
+            //        break;
+            //}
         }
 
         #endregion

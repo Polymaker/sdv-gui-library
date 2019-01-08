@@ -9,7 +9,10 @@ namespace Polymaker.SdvUI
 {
     public class MouseEventArgs : EventArgs
     {
-        public MouseButtons Button { get; }
+        public MouseButtons Buttons { get; }
+        public bool LeftButton => Buttons.HasFlag(MouseButtons.Left);
+        public bool RightButton => Buttons.HasFlag(MouseButtons.Right);
+        public bool MiddleButton => Buttons.HasFlag(MouseButtons.Middle);
         public Point Location { get;  private set; }
         public Point DisplayLocation { get; private set; }
 
@@ -21,20 +24,20 @@ namespace Polymaker.SdvUI
         {
             Location = location;
             DisplayLocation = location;
-            Button = button;
+            Buttons = button;
         }
 
         public MouseEventArgs(Microsoft.Xna.Framework.Input.MouseState state)
         {
             Location = new Point(state.X, state.Y);
             DisplayLocation = Location;
-            Button =  MouseButtons.None;
+            Buttons =  MouseButtons.None;
             if (state.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                Button |= MouseButtons.Left;
+                Buttons |= MouseButtons.Left;
             if (state.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                Button |= MouseButtons.Right;
+                Buttons |= MouseButtons.Right;
             if (state.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                Button |= MouseButtons.Middle;
+                Buttons |= MouseButtons.Middle;
 
             Delta = state.ScrollWheelValue;
         }
@@ -43,13 +46,13 @@ namespace Polymaker.SdvUI
         {
             Location = new Point(state.X, state.Y);
             DisplayLocation = Location;
-            Button = MouseButtons.None;
+            Buttons = MouseButtons.None;
             if (state.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                Button |= MouseButtons.Left;
+                Buttons |= MouseButtons.Left;
             if (state.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                Button |= MouseButtons.Right;
+                Buttons |= MouseButtons.Right;
             if (state.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-                Button |= MouseButtons.Middle;
+                Buttons |= MouseButtons.Middle;
 
             Delta = delta;
         }
@@ -58,20 +61,20 @@ namespace Polymaker.SdvUI
         {
             Location = location;
             DisplayLocation = displayLocation;
-            Button = button;
+            Buttons = button;
         }
 
         public MouseEventArgs(Point location, Point displayLocation, MouseButtons button, int delta)
         {
             Location = location;
             DisplayLocation = displayLocation;
-            Button = button;
+            Buttons = button;
             Delta = delta;
         }
 
         public MouseEventArgs ToLocal(Controls.SdvControl control)
         {
-            return new MouseEventArgs(control.PointToLocal(DisplayLocation), DisplayLocation, Button, Delta);
+            return new MouseEventArgs(control.PointToLocal(DisplayLocation), DisplayLocation, Buttons, Delta);
         }
     }
 }

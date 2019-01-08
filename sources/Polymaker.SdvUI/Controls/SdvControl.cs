@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Polymaker.SdvUI.Controls.Events;
 using Polymaker.SdvUI.Drawing;
 using StardewValley;
 using System;
@@ -11,13 +12,14 @@ using System.Threading.Tasks;
 
 namespace Polymaker.SdvUI.Controls
 {
-    public class SdvControl : ISdvUIComponent, ISdvCoreEvents
+    public class SdvControl : ISdvUIComponent, ISdvCoreEvents, IDisposable
     {
         //public static SpriteFont DefaultFont => Game1.smallFont;
 
         private ISdvContainer _Parent;
+
         public bool Initialized { get; private set; }
-        public bool Active { get; internal set; }
+        public bool Disposed { get; private set; }
 
         public ISdvContainer Parent
         {
@@ -25,14 +27,13 @@ namespace Polymaker.SdvUI.Controls
             set => SetParent(value);
         }
 
-        public MouseState Cursor => Mouse.GetState();
+        public MouseState Cursor => FindForm()?.Cursor ?? Mouse.GetState();
 
         public Point CursorPosition
         {
             get
             {
-                var mouse = Mouse.GetState();
-                return PointToLocal(new Point(mouse.X, mouse.Y));
+                return PointToLocal(new Point(Cursor.X, Cursor.Y));
             }
         }
 
@@ -56,24 +57,24 @@ namespace Polymaker.SdvUI.Controls
                 if (!fromCollection && _Parent != null && !_Parent.Controls.Contains(this))
                     _Parent.Controls.Add(this);
 
-                if (!Initialized && value != null && FinForm() != null)
+                if (!Initialized && value != null && FindForm() != null)
                     Initialize();
 
                 OnParentChanged(EventArgs.Empty);
             }
         }
 
-        public SdvForm FinForm()
+        public SdvForm FindForm()
         {
-            return FinForm(this);
+            return FindForm(this);
         }
 
-        private static SdvForm FinForm(SdvControl control)
+        private static SdvForm FindForm(SdvControl control)
         {
             if (control.Parent is SdvForm form)
                 return form;
             else if (control.Parent is SdvControl parentControl)
-                return FinForm(parentControl);
+                return FindForm(parentControl);
             return null;
         }
 
@@ -158,7 +159,7 @@ namespace Polymaker.SdvUI.Controls
         private const int CONTROL_BOUNDS = 0;
         private const int CLIENT_BOUNDS = 1;
         private const int PARENT_BOUNDS = 2;
-        private const int DISPLAY_BOUNDS = 3;
+        private const int SCREEN_BOUNDS = 3;
         private Rectangle?[] CachedBounds = new Rectangle?[4];
 
         public int X
@@ -233,14 +234,16 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        public Rectangle DisplayRectangle
+        public Rectangle DisplayRectangle => new Rectangle(0, 0, Width, Height);
+
+        public Rectangle ScreenBounds
         {
             get
             {
-                if (!CachedBounds[DISPLAY_BOUNDS].HasValue || HasParentBoundsChanged())
-                    CachedBounds[DISPLAY_BOUNDS] = GetDisplayRectangle();
+                if (!CachedBounds[SCREEN_BOUNDS].HasValue || HasParentBoundsChanged())
+                    CachedBounds[SCREEN_BOUNDS] = GetDisplayRectangle();
 
-                return CachedBounds[DISPLAY_BOUNDS].Value;
+                return CachedBounds[SCREEN_BOUNDS].Value;
             }
         }
 
@@ -264,7 +267,7 @@ namespace Polymaker.SdvUI.Controls
                 return true;
 
             if (Parent != null && CachedBounds[PARENT_BOUNDS].HasValue)
-                return CachedBounds[PARENT_BOUNDS].Value == Parent.DisplayRectangle;
+                return CachedBounds[PARENT_BOUNDS].Value == Parent.ScreenBounds;
 
             return false;
         }
@@ -273,7 +276,7 @@ namespace Polymaker.SdvUI.Controls
         {
             if (Parent != null)
             {
-                var parentBounds = (CachedBounds[PARENT_BOUNDS] = Parent.DisplayRectangle).Value;
+                var parentBounds = (CachedBounds[PARENT_BOUNDS] = Parent.ScreenBounds).Value;
                 var contentOffset = Parent.ClientRectangle;
                 var scrollOffset = (Parent is IScrollableContainer sc ? sc.ScrollOffset : Point.Zero);
                 return new Rectangle(
@@ -301,7 +304,7 @@ namespace Polymaker.SdvUI.Controls
 
         public void Invalidate()
         {
-            CachedBounds[DISPLAY_BOUNDS] = null;
+            CachedBounds[SCREEN_BOUNDS] = null;
             PropagateInvalidate();
         }
 
@@ -312,12 +315,12 @@ namespace Polymaker.SdvUI.Controls
 
         public Point PointToDisplay(Point localPoint)
         {
-            return new Point(DisplayRectangle.X + localPoint.X, DisplayRectangle.Y + localPoint.Y);
+            return new Point(ScreenBounds.X + localPoint.X, ScreenBounds.Y + localPoint.Y);
         }
 
         public Point PointToLocal(Point displayPoint)
         {
-            return new Point(displayPoint.X - DisplayRectangle.X, displayPoint.Y - DisplayRectangle.Y);
+            return new Point(displayPoint.X - ScreenBounds.X, displayPoint.Y - ScreenBounds.Y);
         }
 
         #endregion
@@ -385,6 +388,8 @@ namespace Polymaker.SdvUI.Controls
 
         public bool Visible { get; set; } = true;
 
+        public bool Focused { get; private set; }
+
         #region Size & Bounds Management
 
         public void SetBounds(int x, int y, int width, int height, ControlBounds specifiedBounds)
@@ -411,7 +416,7 @@ namespace Polymaker.SdvUI.Controls
                 _Height = height;
                 CachedBounds[CONTROL_BOUNDS] = null;
                 CachedBounds[CLIENT_BOUNDS] = null;
-                CachedBounds[DISPLAY_BOUNDS] = null;
+                CachedBounds[SCREEN_BOUNDS] = null;
                 OnSizeChanged(EventArgs.Empty);
             }
         }
@@ -429,6 +434,8 @@ namespace Polymaker.SdvUI.Controls
         public event EventHandler<MouseEventArgs> MouseUp;
         public event EventHandler<MouseEventArgs> MouseClick;
         public event EventHandler<MouseEventArgs> MouseMove;
+        public event EventHandler MouseEnter;
+        public event EventHandler MouseLeave;
         public event EventHandler<int> ScrollWheel;
 
         protected virtual void OnMouseDown(MouseEventArgs e)
@@ -449,6 +456,16 @@ namespace Polymaker.SdvUI.Controls
         protected virtual void OnMouseMove(MouseEventArgs e)
         {
             MouseMove?.Invoke(this, e);
+        }
+
+        protected virtual void OnMouseEnter(EventArgs e)
+        {
+            MouseEnter?.Invoke(this, e);
+        }
+
+        protected virtual void OnMouseLeave(EventArgs e)
+        {
+            MouseLeave?.Invoke(this, e);
         }
 
         protected virtual void OnScrollWheel(int delta)
@@ -473,6 +490,19 @@ namespace Polymaker.SdvUI.Controls
 
         #endregion
 
+        public event EventHandler GotFocus;
+        public event EventHandler LostFocus;
+
+        protected virtual void OnGotFocus(EventArgs e)
+        {
+            GotFocus?.Invoke(this, e);
+        }
+
+        protected virtual void OnLostFocus(EventArgs e)
+        {
+            LostFocus?.Invoke(this, e);
+        }
+
         #region Event redirection
 
         private MouseButtons PressedMouseButtons = MouseButtons.None;
@@ -481,17 +511,17 @@ namespace Polymaker.SdvUI.Controls
         void ISdvCoreEvents.OnMouseDown(MouseEventArgs e)
         {
             OnMouseDown(e);
-            PressedMouseButtons |= e.Button;
+            PressedMouseButtons |= e.Buttons;
             LastMousePress = new Vector2(e.X, e.Y);
         }
 
         void ISdvCoreEvents.OnMouseUp(MouseEventArgs e)
         {
             OnMouseUp(e);
-            PressedMouseButtons ^= e.Button;
+            PressedMouseButtons ^= e.Buttons;
             var curPos = new Vector2(e.X, e.Y);
             if((curPos - LastMousePress).Length() < 3)
-                OnMouseClick(new MouseEventArgs(e.Location, e.DisplayLocation, e.Button));
+                OnMouseClick(new MouseEventArgs(e.Location, e.DisplayLocation, e.Buttons));
         }
 
         void ISdvCoreEvents.OnMouseMove(MouseEventArgs e)
@@ -503,7 +533,7 @@ namespace Polymaker.SdvUI.Controls
         protected virtual void OnDrawBackground(SdvGraphics g)
         {
             if (BackColor != Color.Transparent)
-                g.FillRect(BackColor, new Rectangle(0,0,Width,Height));
+                g.FillRect(BackColor, DisplayRectangle);
         }
 
         protected virtual void OnDraw(SdvGraphics g)
@@ -515,11 +545,91 @@ namespace Polymaker.SdvUI.Controls
         {
             if (Width > 0 && Height > 0)
             {
-                using (var g = new SdvGraphics(b, DisplayRectangle.Location))
+                using (var g = new SdvGraphics(b, ScreenBounds.Location))
                 {
                     OnDrawBackground(g);
                     OnDraw(g);
                 }
+            }
+        }
+
+        private Vector2[] MouseButtonsDownPos = new Vector2[4];
+
+        internal void ProcessEvent(SdvEvents eventType, object data)
+        {
+            switch (eventType)
+            {
+                case SdvEvents.MouseDown:
+                    {
+                        var eventData = (MouseEventArgs)data;
+                        MouseButtonsDownPos[(int)eventData.Buttons] = new Vector2(eventData.Location.X, eventData.Location.Y);
+                        OnMouseDown(eventData);
+                        break;
+                    }
+                case SdvEvents.MouseUp:
+                    {
+                        var eventData = (MouseEventArgs)data;
+                        OnMouseUp(eventData);
+
+                        var curPos = new Vector2(eventData.Location.X, eventData.Location.Y);
+                        if((curPos - MouseButtonsDownPos[(int)eventData.Buttons]).Length() < 4)
+                            OnMouseClick((MouseEventArgs)data);
+
+                        break;
+                    }
+                case SdvEvents.MouseClick:
+                    {
+                        OnMouseClick((MouseEventArgs)data);
+                        break;
+                    }
+                case SdvEvents.MouseMove:
+                    {
+                        OnMouseMove((MouseEventArgs)data);
+                        break;
+                    }
+                case SdvEvents.ScrollWheel:
+                    {
+                        OnScrollWheel((int)data);
+                        break;
+                    }
+                case SdvEvents.MouseEnter:
+                    {
+                        OnMouseEnter(data as EventArgs ?? EventArgs.Empty);
+                        break;
+                    }
+                case SdvEvents.MouseLeave:
+                    {
+                        OnMouseLeave(data as EventArgs ?? EventArgs.Empty);
+                        break;
+                    }
+                case SdvEvents.FocusChanged:
+                    {
+                        Focused = (bool)data;
+                        if (Focused)
+                            OnGotFocus(EventArgs.Empty);
+                        else
+                            OnLostFocus(EventArgs.Empty);
+                        break;
+                    }
+            }
+        }
+
+        ~SdvControl()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            if (!Disposed)
+            {
+                if (Parent != null)
+                {
+                    if (Parent.Controls.Contains(this))
+                        SetParent(null, false);
+                    _Parent = null;
+                }
+                Disposed = true;
             }
         }
     }

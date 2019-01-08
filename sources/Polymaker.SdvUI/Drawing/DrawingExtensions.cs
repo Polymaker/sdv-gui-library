@@ -21,63 +21,29 @@ namespace Polymaker.SdvUI
             DrawImage(b, image, new Rectangle((int)position.X, (int)position.Y, (int)image.Size.X, (int)image.Size.Y));
         }
 
+        public static void DrawImage(this SpriteBatch b, SdvImage image, Vector2 position, float scale)
+        {
+            DrawImage(b, image, new Rectangle((int)position.X, (int)position.Y, (int)(image.SourceSize.X * scale), (int)(image.SourceSize.Y * scale)));
+        }
+
         public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination)
         {
-            var computedScale = image.Scale;
-            if (image.Scale == 1f && (image.SourceRect.Width != destination.Width || image.SourceRect.Height != destination.Height))
-            {
-                var minSize = Math.Min(image.Size.X, image.Size.Y);
-                computedScale = (float)Math.Round(minSize / 8f);
-            }
-            DrawImage(b, image, destination, Color.White, computedScale, false);
+            DrawImage(b, image, destination, Color.White, false);
         }
 
-        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, float scale)
+        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, Color color, bool withShadow = false)
         {
-            DrawImage(b, image, destination, Color.White, scale, false);
-        }
-
-        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, Color color/* = default(Color)*/, float scale = 1f, bool withShadow = false)
-        {
+            var scale = new Vector2(destination.Width / image.SourceSize.X, destination.Height / image.SourceSize.Y);
             if (withShadow)
             {
-                Utility.drawWithShadow(b, image.Texture,
-                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale, destination.Y + image.SourceRect.Height / 2 * scale),
-                    image.SourceRect, color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, false, 0.86f + destination.Y / 20000f, -1, -1, 0.35f);
+                b.Draw(image.Texture, new Vector2(destination.X - 4f, destination.Y + 4f), image.SourceRect,
+                    Color.Black * 0.35f, 0, Vector2.Zero, scale, SpriteEffects.None, (destination.Y / 10000f) - 0.0001f);
             }
-            else
-            {
-                b.Draw(image.Texture,
-                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale, destination.Y + image.SourceRect.Height / 2 * scale), image.SourceRect,
-                    color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, SpriteEffects.None, 0.86f + destination.Y / 20000f);
-            }
+
+            b.Draw(image.Texture, new Vector2(destination.X, destination.Y), image.SourceRect, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
-        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, Color color/* = default(Color)*/, Vector2 scale, bool withShadow = false)
-        {
-            if (withShadow)
-            {
-
-            }
-            else
-            {
-                b.Draw(image.Texture,
-                    new Vector2(destination.X + image.SourceRect.Width / 2 * scale.X, destination.Y + image.SourceRect.Height / 2 * scale.Y), image.SourceRect,
-                    color, 0f, new Vector2(image.SourceRect.Width / 2, image.SourceRect.Height / 2), scale, SpriteEffects.None, 0.86f + destination.Y / 20000f);
-            }
-        }
-
-        public static void DrawImage(this SpriteBatch b, SdvImage image, Rectangle destination, Color color)
-        {
-            
-        }
-
-        public static void DrawImageUnstreched(this SpriteBatch b, SdvImage image, Rectangle destination, Color color)
-        {
-
-        }
-
-        public static void DrawImageUnstreched(this SpriteBatch b, SdvImage image, Rectangle destination, float scale, Color color)
+        public static void DrawImageUnstreched(this SpriteBatch b, SdvImage image, Rectangle destination, Color color, bool withShadow = false)
         {
 
         }

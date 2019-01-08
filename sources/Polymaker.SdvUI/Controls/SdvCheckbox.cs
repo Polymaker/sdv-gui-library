@@ -83,7 +83,7 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (e.Button == MouseButtons.Left && Enabled)
+            if (e.Buttons == MouseButtons.Left && Enabled)
             {
                 Checked = !Checked;
                 if (!string.IsNullOrEmpty(CheckSound))
@@ -106,7 +106,7 @@ namespace Polymaker.SdvUI.Controls
 
         protected override void OnDraw(SdvGraphics g)
         {
-            g.DrawImage(Checked ? CheckedImage : UnCheckedImage, new Rectangle(Padding.Left, Padding.Top, ImageWidth, ImageWidth), Enabled ? Color.White : Color.Gray, (CheckedImage ?? UnCheckedImage).Scale);
+            g.DrawImage(Checked ? CheckedImage : UnCheckedImage, new Rectangle(Padding.Left, Padding.Top, ImageWidth, ImageWidth), Enabled ? Color.White : Color.Gray);
             //g.Offset = new Point(g.Offset.X + ImageWidth, g.Offset.Y);
             base.OnDraw(g);
         }

@@ -47,6 +47,11 @@ namespace Polymaker.SdvUI.Drawing
             DrawImage(image, x, y, (int)image.Size.X, (int)image.Size.Y);
         }
 
+        public void DrawImage(SdvImage image, int x, int y, float scale)
+        {
+            DrawImage(image, x, y, (int)(image.SourceSize.X * scale), (int)(image.SourceSize.Y * scale));
+        }
+
         public void DrawImage(SdvImage image, Vector2 pos)
         {
             DrawImage(image, (int)pos.X, (int)pos.Y);
@@ -57,9 +62,9 @@ namespace Polymaker.SdvUI.Drawing
             DrawImage(image, pos.X, pos.Y);
         }
 
-        public void DrawImage(SdvImage image, int x, int y, int w, int h)
+        public void DrawImage(SdvImage image, int x, int y, int w, int h, Color color = default(Color), bool withShadow = false)
         {
-            DrawImage(image, new Rectangle(x, y, w, h));
+            DrawImage(image, new Rectangle(x, y, w, h), color, withShadow);
         }
 
         public void DrawImage(SdvImage image, Rectangle destination)
@@ -68,16 +73,12 @@ namespace Polymaker.SdvUI.Drawing
             DrawingExtensions.DrawImage(SB, image, destination);
         }
 
-        public void DrawImage(SdvImage image, Rectangle destination, float scale)
+        public void DrawImage(SdvImage image, Rectangle destination, Color color, bool withShadow = false)
         {
             destination.Offset(Offset);
-            DrawingExtensions.DrawImage(SB, image, destination, scale);
-        }
-
-        public void DrawImage(SdvImage image, Rectangle destination, Color color/* = default(Color)*/, float scale = 1f, bool withShadow = false)
-        {
-            destination.Offset(Offset);
-            DrawingExtensions.DrawImage(SB, image, destination, color, scale, withShadow);
+            if (color == default(Color))
+                color = Color.White;
+            DrawingExtensions.DrawImage(SB, image, destination, color, withShadow);
         }
 
         public void DrawImageRotated(SdvImage image, Rectangle destination, float rotation, Color color, float scale = 1f, bool withShadow = false)
@@ -112,7 +113,6 @@ namespace Polymaker.SdvUI.Drawing
         }
 
         #endregion
-
 
         #region Text Drawing
 

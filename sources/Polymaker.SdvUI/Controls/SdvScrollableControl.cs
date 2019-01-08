@@ -90,18 +90,33 @@ namespace Polymaker.SdvUI.Controls
             ScrollChangedCore();
         }
 
-        public override bool ForwardScrollWheel(MouseEventArgs data)
+        protected override void OnScrollWheel(int delta)
         {
-            var baseResult = base.ForwardScrollWheel(data);
+            base.OnScrollWheel(delta);
 
-
-            if (!baseResult && VScrollVisible && DisplayRectangle.Contains(data.DisplayLocation))
+            if(Enabled && (VScrollVisible || HScrollVisible))
             {
-                VScrollBar.PerformScrollWheel(data.Delta);
-                return true;
+                (VScrollVisible ? VScrollBar : HScrollBar).PerformScrollWheel(delta);
             }
-            return baseResult;
         }
+
+        public override bool HandleScrollWheel(MouseEventArgs data)
+        {
+            return Enabled && (VScrollVisible || HScrollVisible) && DisplayRectangle.Contains(data.Location);
+        }
+
+        //public override bool ForwardScrollWheel(MouseEventArgs data)
+        //{
+        //    var baseResult = base.ForwardScrollWheel(data);
+
+
+        //    if (!baseResult && VScrollVisible && ScreenBounds.Contains(data.DisplayLocation))
+        //    {
+        //        VScrollBar.PerformScrollWheel(data.Delta);
+        //        return true;
+        //    }
+        //    return baseResult;
+        //}
 
         public override Rectangle GetClientRectangle()
         {
@@ -194,7 +209,7 @@ namespace Polymaker.SdvUI.Controls
 
         protected override void OnDraw(SdvGraphics g)
         {
-            var displayRect = DisplayRectangle;
+            var displayRect = ScreenBounds;
             displayRect.Width -= VScrollVisible ? VScrollBar.Width : 0;
             displayRect.Height -= HScrollVisible ? HScrollBar.Height : 0;
 
