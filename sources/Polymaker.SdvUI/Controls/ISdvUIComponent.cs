@@ -15,6 +15,8 @@ namespace Polymaker.SdvUI.Controls
         int Width { get; set; }
         int Height { get; set; }
         Point Size { get; set; }
+        bool Enabled { get; set; }
+        bool Visible { get; set; }
         Rectangle Bounds { get; }
         Rectangle ClientRectangle { get; }
         Rectangle DisplayRectangle { get; }

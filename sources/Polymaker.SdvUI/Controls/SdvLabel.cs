@@ -199,7 +199,7 @@ namespace Polymaker.SdvUI.Controls
             if (hasText)
             {
                 textBounds = LayoutHelper.GetAlignedBounds(textBounds, textSize, TextAlign);
-                g.DrawString(Text, Font, Enabled ? ForeColor : Color.Gray, textBounds);
+                g.DrawString(Text, Font, Enabled ? ForeColor : Color.DarkGray, textBounds);
             }
         }
     }

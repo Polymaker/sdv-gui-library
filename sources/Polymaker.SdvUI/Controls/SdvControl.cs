@@ -364,7 +364,24 @@ namespace Polymaker.SdvUI.Controls
             ForeColorChanged?.Invoke(this, e);
         }
 
-        public bool Enabled { get; set; } = true;
+        private bool _Enabled = true;
+
+        public bool Enabled
+        {
+            get
+            {
+                if (Parent != null && !Parent.Enabled)
+                    return false;
+                return _Enabled;
+            }
+            set
+            {
+                if (value != _Enabled)
+                {
+                    _Enabled = value;
+                }
+            }
+        }
 
         public bool Visible { get; set; } = true;
 

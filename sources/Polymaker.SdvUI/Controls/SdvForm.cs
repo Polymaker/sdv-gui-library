@@ -20,6 +20,10 @@ namespace Polymaker.SdvUI.Controls
 
         public SdvControlCollection Controls { get; }
 
+        public bool Enabled { get; set; } = true;
+
+        public bool Visible { get; set; } = true;
+
         public MouseState Cursor => Mouse.GetState();
 
         public int X
