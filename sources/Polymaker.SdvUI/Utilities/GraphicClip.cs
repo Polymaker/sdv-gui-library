@@ -44,6 +44,12 @@ namespace Polymaker.SdvUI.Utilities
             fixedRect.Height = Math.Min(clipRect.Bottom, b.GraphicsDevice.Viewport.Height) - fixedRect.Y;
             fixedRect.Width = Math.Min(clipRect.Right, b.GraphicsDevice.Viewport.Width) - fixedRect.X;
             
+            if(fixedRect.Width <=0 || fixedRect.Height <= 0)
+            {
+                Trace.WriteLine("Invalid Rect!!");
+                throw  new InvalidOperationException("Invalid Clip Rect. " + fixedRect);
+            }
+
             ClipRectangle = fixedRect;
 
             if (PreviousClip != null)

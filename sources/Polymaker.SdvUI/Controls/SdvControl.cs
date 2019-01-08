@@ -87,8 +87,19 @@ namespace Polymaker.SdvUI.Controls
         private void Initialize()
         {
             if (Width == 0 || Height == 0)
-                Size = GetPreferredSize();
+            {
+                var minSize = GetPreferredSize();
+                minSize.X = Math.Max(Width, minSize.X);
+                minSize.Y = Math.Max(Width, minSize.Y);
+                Size = minSize;
+            }
             Initialized = true;
+            OnInitialize();
+        }
+
+        protected virtual void OnInitialize()
+        {
+
         }
 
         #region Text related members
@@ -277,9 +288,21 @@ namespace Polymaker.SdvUI.Controls
             return Bounds;
         }
 
-        public void InvalidateDisplayRectangle()
+        protected virtual void PropagateInvalidate()
+        {
+            if (this is SdvContainerControl sdvContainer)
+            {
+                foreach (var ctrl in sdvContainer.Controls)
+                {
+                    ctrl.Invalidate();
+                }
+            }
+        }
+
+        public void Invalidate()
         {
             CachedBounds[DISPLAY_BOUNDS] = null;
+            PropagateInvalidate();
         }
 
         public virtual Rectangle GetClientRectangle()
@@ -463,7 +486,7 @@ namespace Polymaker.SdvUI.Controls
         protected virtual void OnDrawBackground(SdvGraphics g)
         {
             if (BackColor != Color.Transparent)
-                g.FillRect(BackColor, Bounds);
+                g.FillRect(BackColor, new Rectangle(0,0,Width,Height));
         }
 
         protected virtual void OnDraw(SdvGraphics g)

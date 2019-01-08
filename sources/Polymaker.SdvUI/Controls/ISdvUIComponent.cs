@@ -20,6 +20,7 @@ namespace Polymaker.SdvUI.Controls
         Rectangle DisplayRectangle { get; }
         Rectangle GetDisplayRectangle();
         Point PointToDisplay(Point localPoint);
+        Point PointToLocal(Point displayPoint);
         ISdvContainer Parent { get; }
     }
 }

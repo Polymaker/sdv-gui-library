@@ -54,12 +54,17 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        public string CheckSound { get; set; }
+
+        private int ImageWidth => (int)(CheckedImage ?? UnCheckedImage).Size.X;
+
         public event EventHandler CheckChanged;
 
         public SdvCheckbox()
         {
             _CheckedImage = new SdvImage(Game1.mouseCursors, StardewValley.Menus.OptionsCheckbox.sourceRectChecked, 4f);
             _UnCheckedImage = new SdvImage(Game1.mouseCursors, StardewValley.Menus.OptionsCheckbox.sourceRectUnchecked, 4f);
+            CheckSound = "drumkit6";
         }
 
         protected override Point GetPreferredSize()
@@ -68,7 +73,7 @@ namespace Polymaker.SdvUI.Controls
 
             if (CheckedImage != null || UnCheckedImage != null)
             {
-                baseSize.X += (int)(CheckedImage ?? UnCheckedImage).Size.X;
+                baseSize.X += ImageWidth + TextImageSpacing;
                 baseSize.Y = Math.Max(baseSize.Y, (int)(CheckedImage ?? UnCheckedImage).Size.Y + Padding.Vertical);
             }
 
@@ -78,9 +83,11 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (Bounds.Contains(e.Location))
+            if (e.Button == MouseButtons.Left && Enabled)
             {
                 Checked = !Checked;
+                if (!string.IsNullOrEmpty(CheckSound))
+                    Game1.playSound(CheckSound);
             }
         }
 
@@ -89,10 +96,18 @@ namespace Polymaker.SdvUI.Controls
             CheckChanged?.Invoke(this, e);
         }
 
+        public override Rectangle GetClientRectangle()
+        {
+            var baseRect = base.GetClientRectangle();
+            baseRect.Width -= ImageWidth + TextImageSpacing;
+            baseRect.X += ImageWidth + TextImageSpacing;
+            return baseRect;
+        }
+
         protected override void OnDraw(SdvGraphics g)
         {
-            g.DrawImage(Checked ? CheckedImage : UnCheckedImage, Point.Zero);
-            g.Offset = new Point(g.Offset.X + (int)(CheckedImage ?? UnCheckedImage).Size.X, g.Offset.Y);
+            g.DrawImage(Checked ? CheckedImage : UnCheckedImage, new Rectangle(Padding.Left, Padding.Top, ImageWidth, ImageWidth), Enabled ? Color.White : Color.Gray, (CheckedImage ?? UnCheckedImage).Scale);
+            //g.Offset = new Point(g.Offset.X + ImageWidth, g.Offset.Y);
             base.OnDraw(g);
         }
     }

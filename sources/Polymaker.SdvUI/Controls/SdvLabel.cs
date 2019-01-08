@@ -193,13 +193,13 @@ namespace Polymaker.SdvUI.Controls
             if (hasImage)
             {
                 imageBounds = LayoutHelper.GetAlignedBounds(imageBounds, Image.Size, ImageAlign);
-                g.DrawImage(Image, imageBounds);
+                g.DrawImage(Image, imageBounds, Enabled ? Color.White : Color.Gray);
             }
 
             if (hasText)
             {
                 textBounds = LayoutHelper.GetAlignedBounds(textBounds, textSize, TextAlign);
-                g.DrawString(Text, Font, ForeColor, textBounds);
+                g.DrawString(Text, Font, Enabled ? ForeColor : Color.Gray, textBounds);
             }
         }
     }

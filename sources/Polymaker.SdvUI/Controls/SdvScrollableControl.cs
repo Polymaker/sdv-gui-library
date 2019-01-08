@@ -94,6 +94,7 @@ namespace Polymaker.SdvUI.Controls
         {
             var baseResult = base.ForwardScrollWheel(data);
 
+
             if (!baseResult && VScrollVisible && DisplayRectangle.Contains(data.DisplayLocation))
             {
                 VScrollBar.PerformScrollWheel(data.Delta);
@@ -121,7 +122,7 @@ namespace Polymaker.SdvUI.Controls
         {
             foreach(var ctrl in Controls)
             {
-                ctrl.InvalidateDisplayRectangle();
+                ctrl.Invalidate();
             }
         }
 
@@ -193,7 +194,6 @@ namespace Polymaker.SdvUI.Controls
 
         protected override void OnDraw(SdvGraphics g)
         {
-            base.OnDraw(g);
             var displayRect = DisplayRectangle;
             displayRect.Width -= VScrollVisible ? VScrollBar.Width : 0;
             displayRect.Height -= HScrollVisible ? HScrollBar.Height : 0;

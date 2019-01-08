@@ -92,6 +92,8 @@ namespace Polymaker.SdvUI.Controls
 
         public string ButtonClickSound { get; set; }
 
+        public string ScrollingSound { get; set; }
+
         public event EventHandler Scroll;
 
         public SdvScrollBar(Orientation orientation)
@@ -104,20 +106,13 @@ namespace Polymaker.SdvUI.Controls
                 Height = SCROLLBAR_SIZE;
             else
                 Width = SCROLLBAR_SIZE;
+            ButtonClickSound = "shwip";
+            ScrollingSound = "shiny4";
         }
 
-        public SdvScrollBar(Orientation orientation, bool fromContainer)
+        public SdvScrollBar(Orientation orientation, bool fromContainer) :this(orientation)
         {
-            Orientation = orientation;
-            _MaxValue = 1;
-            SmallChange = 8;
-            LargeChange = 32;
             IsContainerScrollBar = fromContainer;
-
-            if (Orientation == Orientation.Horizontal)
-                Height = SCROLLBAR_SIZE;
-            else
-                Width = SCROLLBAR_SIZE;
         }
 
         private void OnScrollCore()
@@ -221,7 +216,7 @@ namespace Polymaker.SdvUI.Controls
             {
                 UpArrowBounds = new Rectangle(0, 0, 48, 44);
                 DownArrowBounds = new Rectangle(Width - 48, 0, 48, 44);
-                ScrollbarTrackBounds = new Rectangle(UpArrowBounds.Right + 4, 11, Width - (UpArrowBounds.Width + 4) * 2, TRACK_SIZE);
+                ScrollbarTrackBounds = new Rectangle(UpArrowBounds.Right + 4, 8, Width - (UpArrowBounds.Width + 4) * 2, TRACK_SIZE);
             }
         }
 
@@ -270,7 +265,8 @@ namespace Polymaker.SdvUI.Controls
                     if (Value > 0)
                     {
                         Value -= LargeChange;
-                        PlayButtonClickSound();
+                        if (!string.IsNullOrEmpty(ButtonClickSound))
+                            StardewValley.Game1.playSound(ButtonClickSound);
                     }
                 }
                 else if (DownArrowBounds.Contains(e.Location))
@@ -278,13 +274,19 @@ namespace Polymaker.SdvUI.Controls
                     if (Value < MaxValue)
                     {
                         Value += LargeChange;
-                        PlayButtonClickSound();
+                        if (!string.IsNullOrEmpty(ButtonClickSound))
+                            StardewValley.Game1.playSound(ButtonClickSound);
                     }
                 }
                 else if (ScrollbarTrackBounds.Contains(e.Location))
                 {
-                    var clickedPos = GetScrollValueAtPosition(e.Location);
-                    Value = clickedPos;
+                    var valueAtPosition = GetScrollValueAtPosition(e.Location);
+                    if (valueAtPosition != Value)
+                    {
+                        Value = valueAtPosition;
+                        if (!string.IsNullOrEmpty(ScrollingSound))
+                            StardewValley.Game1.playSound(ScrollingSound);
+                    }
                 }
             }
         }
@@ -318,7 +320,11 @@ namespace Polymaker.SdvUI.Controls
             base.OnScrollWheel(delta);
             if (Enabled)
             {
+                var oldValue = Value;
                 Value += (WheelScrollLarge ? LargeChange : SmallChange) * Math.Sign(delta) * -1;
+
+                if (oldValue != Value && !string.IsNullOrEmpty(ScrollingSound))
+                    StardewValley.Game1.playSound(ScrollingSound);
             }
         }
 
@@ -341,8 +347,13 @@ namespace Polymaker.SdvUI.Controls
                 //    newValueRatio = (DragStart.Y - ScrollbarTrackBounds.Y + dragDelta.Y) / (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height);
                 //else
                 //    newValueRatio = (DragStart.X - ScrollbarTrackBounds.X + dragDelta.X) / (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Height);
-
-                Value = GetScrollValueAtPosition(e.Location);
+                var newValue = GetScrollValueAtPosition(e.Location);
+                if (newValue != Value)
+                {
+                    Value = newValue;
+                    if (!string.IsNullOrEmpty(ScrollingSound))
+                        StardewValley.Game1.playSound(ScrollingSound);
+                } 
             }
         }
 
