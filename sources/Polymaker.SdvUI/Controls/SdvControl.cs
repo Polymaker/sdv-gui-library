@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Polymaker.SdvUI.Controls
 {
-    public class SdvControl : ISdvUIComponent, ISdvCoreEvents, IDisposable
+    public class SdvControl : ISdvUIComponent, IDisposable
     {
         //public static SpriteFont DefaultFont => Game1.smallFont;
 
@@ -134,6 +134,8 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        public string TooltipText { get; set; }
+
         public event EventHandler FontChanged;
         public event EventHandler TextChanged;
 
@@ -241,7 +243,7 @@ namespace Polymaker.SdvUI.Controls
             get
             {
                 if (!CachedBounds[SCREEN_BOUNDS].HasValue || HasParentBoundsChanged())
-                    CachedBounds[SCREEN_BOUNDS] = GetDisplayRectangle();
+                    CachedBounds[SCREEN_BOUNDS] = GetScreenBounds();
 
                 return CachedBounds[SCREEN_BOUNDS].Value;
             }
@@ -272,7 +274,7 @@ namespace Polymaker.SdvUI.Controls
             return false;
         }
 
-        public virtual Rectangle GetDisplayRectangle()
+        public virtual Rectangle GetScreenBounds()
         {
             if (Parent != null)
             {
@@ -390,6 +392,8 @@ namespace Polymaker.SdvUI.Controls
 
         public bool Focused { get; private set; }
 
+        public bool MouseOver => Visible && DisplayRectangle.Contains(CursorPosition);
+
         #region Size & Bounds Management
 
         public void SetBounds(int x, int y, int width, int height, ControlBounds specifiedBounds)
@@ -417,6 +421,7 @@ namespace Polymaker.SdvUI.Controls
                 CachedBounds[CONTROL_BOUNDS] = null;
                 CachedBounds[CLIENT_BOUNDS] = null;
                 CachedBounds[SCREEN_BOUNDS] = null;
+                Invalidate();
                 OnSizeChanged(EventArgs.Empty);
             }
         }
@@ -492,6 +497,7 @@ namespace Polymaker.SdvUI.Controls
 
         public event EventHandler GotFocus;
         public event EventHandler LostFocus;
+        public event EventHandler Click;
 
         protected virtual void OnGotFocus(EventArgs e)
         {
@@ -503,32 +509,10 @@ namespace Polymaker.SdvUI.Controls
             LostFocus?.Invoke(this, e);
         }
 
-        #region Event redirection
-
-        private MouseButtons PressedMouseButtons = MouseButtons.None;
-        private Vector2 LastMousePress;
-
-        void ISdvCoreEvents.OnMouseDown(MouseEventArgs e)
+        protected virtual void OnClick(EventArgs e)
         {
-            OnMouseDown(e);
-            PressedMouseButtons |= e.Buttons;
-            LastMousePress = new Vector2(e.X, e.Y);
+            Click?.Invoke(this, e);
         }
-
-        void ISdvCoreEvents.OnMouseUp(MouseEventArgs e)
-        {
-            OnMouseUp(e);
-            PressedMouseButtons ^= e.Buttons;
-            var curPos = new Vector2(e.X, e.Y);
-            if((curPos - LastMousePress).Length() < 3)
-                OnMouseClick(new MouseEventArgs(e.Location, e.DisplayLocation, e.Buttons));
-        }
-
-        void ISdvCoreEvents.OnMouseMove(MouseEventArgs e)
-        {
-            OnMouseMove(e);
-        }
-        #endregion
 
         protected virtual void OnDrawBackground(SdvGraphics g)
         {
@@ -573,7 +557,11 @@ namespace Polymaker.SdvUI.Controls
 
                         var curPos = new Vector2(eventData.Location.X, eventData.Location.Y);
                         if((curPos - MouseButtonsDownPos[(int)eventData.Buttons]).Length() < 4)
+                        {
                             OnMouseClick((MouseEventArgs)data);
+                            if (eventData.LeftButton)
+                                OnClick(EventArgs.Empty);
+                        }
 
                         break;
                     }

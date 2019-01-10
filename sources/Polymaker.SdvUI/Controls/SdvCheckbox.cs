@@ -73,7 +73,7 @@ namespace Polymaker.SdvUI.Controls
 
             if (CheckedImage != null || UnCheckedImage != null)
             {
-                baseSize.X += ImageWidth + TextImageSpacing;
+                baseSize.X += ImageWidth + ((Image != null || !string.IsNullOrEmpty(Text)) ? TextImageSpacing : 0);
                 baseSize.Y = Math.Max(baseSize.Y, (int)(CheckedImage ?? UnCheckedImage).Size.Y + Padding.Vertical);
             }
 
@@ -106,7 +106,11 @@ namespace Polymaker.SdvUI.Controls
 
         protected override void OnDraw(SdvGraphics g)
         {
-            g.DrawImage(Checked ? CheckedImage : UnCheckedImage, new Rectangle(Padding.Left, Padding.Top, ImageWidth, ImageWidth), Enabled ? Color.White : Color.Gray);
+            var checkBoxBounds = new Rectangle(Padding.Left, Padding.Top, ImageWidth, ImageWidth);
+            g.DrawImage(Checked ? CheckedImage : UnCheckedImage, checkBoxBounds, Enabled ? Color.White : Color.Gray);
+            if (!Enabled)
+                g.FillRect(new Color(50, 50, 50, 120), checkBoxBounds);
+
             //g.Offset = new Point(g.Offset.X + ImageWidth, g.Offset.Y);
             base.OnDraw(g);
         }

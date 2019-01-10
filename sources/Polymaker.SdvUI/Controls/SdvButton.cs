@@ -12,24 +12,44 @@ namespace Polymaker.SdvUI.Controls
 {
     public class SdvButton : SdvLabel
     {
+        public SdvImage ButtonTexture { get; set; }
+
+        public bool IsTextureBox { get; set; }
+
         public SdvButton() : base()
         {
             Padding = new Padding(16, 8, 16, 8);
+            ButtonTexture = SdvImages.ButtonTexture;
+            ButtonTexture.Scale = 4f;
+            IsTextureBox = true;
         }
 
         protected override void OnDrawBackground(SdvGraphics g)
         {
             base.OnDrawBackground(g);
 
-            var mouseOver = DisplayRectangle.Contains(CursorPosition);
-            var pressed = Focused && Cursor.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-            var imgColor = (pressed || !Enabled) ? new Color(110, 110, 110) : (mouseOver ? Color.LightGray : Color.White);
+            if (ButtonTexture != null)
+            {
+                var mouseOver = DisplayRectangle.Contains(CursorPosition);
+                var pressed = Focused && Cursor.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                var imgColor = pressed ? new Color(110, 110, 110) : (mouseOver ? Color.LightGray : Color.White);
 
-            g.DrawTextureBox(
-                SdvImages.ButtonTexture, 
-                DisplayRectangle,
-                imgColor, 
-                4f);
+                if (!Enabled)
+                    imgColor = new Color(150, 150, 150, 220);
+
+                if (IsTextureBox)
+                {
+                    g.DrawTextureBox(
+                        ButtonTexture,
+                        DisplayRectangle,
+                        imgColor,
+                        ButtonTexture.Scale);
+                }
+                else
+                {
+                    g.DrawImage(ButtonTexture, DisplayRectangle, imgColor);
+                }
+            }
         }
     }
 }

@@ -72,7 +72,6 @@
     <Compile Include="Drawing\ControlBounds.cs" />
     <Compile Include="Controls\Events\ControlsChangedEventArgs.cs" />
     <Compile Include="Controls\ISdvUIComponent.cs" />
-    <Compile Include="Controls\ISdvCoreEvents.cs" />
     <Compile Include="Controls\SdvButton.cs" />
     <Compile Include="Controls\SdvContainerControl.cs" />
     <Compile Include="Drawing\SdvFont.cs" />

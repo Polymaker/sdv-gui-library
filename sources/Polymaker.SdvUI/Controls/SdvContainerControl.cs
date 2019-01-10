@@ -13,6 +13,14 @@ namespace Polymaker.SdvUI.Controls
     {
         public SdvControlCollection Controls { get; }
 
+        public bool ContainsFocus
+        {
+            get
+            {
+                return GetVisibleControls().Any(c => c.Focused || ((c as SdvContainerControl)?.ContainsFocus ?? false));
+            }
+        }
+
         public SdvContainerControl()
         {
             Controls = new SdvControlCollection(this);

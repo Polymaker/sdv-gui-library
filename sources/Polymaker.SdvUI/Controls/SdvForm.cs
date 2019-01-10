@@ -100,14 +100,14 @@ namespace Polymaker.SdvUI.Controls
 
         public Rectangle DisplayRectangle => new Rectangle(0, 0, Width, Height);
 
-        public Rectangle ScreenBounds => GetDisplayRectangle();
+        public Rectangle ScreenBounds => GetScreenBounds();
 
         public Rectangle GetClientRectangle()
         {
             return new Rectangle(Padding.Left, Padding.Top, Width - Padding.Horizontal, Height - Padding.Vertical);
         }
 
-        public Rectangle GetDisplayRectangle()
+        public Rectangle GetScreenBounds()
         {
             return Bounds;
         }
@@ -141,17 +141,22 @@ namespace Polymaker.SdvUI.Controls
                 if(control.Visible)
                     control.PerformDraw(b);
             }
+
+            if (HoveringControl != null && !string.IsNullOrEmpty(HoveringControl.TooltipText))
+            {
+                IClickableMenu.drawHoverText(b, HoveringControl.TooltipText, StardewValley.Game1.smallFont);
+            }
         }
 
         public Point PointToDisplay(Point localPoint)
         {
-            var db = GetDisplayRectangle();
+            var db = GetScreenBounds();
             return new Point(db.X + localPoint.X, db.Y + localPoint.Y);
         }
 
         public Point PointToLocal(Point displayPoint)
         {
-            var db = GetDisplayRectangle();
+            var db = GetScreenBounds();
             return new Point(displayPoint.X - db.X, displayPoint.Y - db.Y);
         }
 

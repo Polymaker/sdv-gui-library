@@ -32,7 +32,12 @@ namespace Polymaker.SdvUI.Controls
 
         public Vector2 MeasureString(string text)
         {
-            return Sprite.MeasureString(text) * Scale;
+            var finalSize = Sprite.MeasureString(text) * Scale;
+            if (!DrawShadow)
+            {
+                finalSize.Y -= 3;
+            }
+            return finalSize;
         }
     }
 }

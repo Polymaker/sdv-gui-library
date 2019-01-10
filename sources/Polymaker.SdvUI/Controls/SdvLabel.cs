@@ -76,6 +76,19 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        public float ImageScale
+        {
+            get => Image?.Scale ?? 1f;
+            set
+            {
+                if(Image != null && Image.Scale != value)
+                {
+                    Image.Scale = value;
+                    AdjustSizeIfNeeded();
+                }
+            }
+        }
+
         public Color DisabledForeColor { get; set; } = new Color(105, 105, 105);
 
         //public bool DrawShadow { get => Font?.DrawShadow ?? false; set { if (Font != null) Font.DrawShadow = value; } }
@@ -88,7 +101,7 @@ namespace Polymaker.SdvUI.Controls
         public SdvLabel()
         {
             _AutoSize = true;
-            Font = Game1.smallFont;
+            Font = new SdvFont(Game1.smallFont, false, true);
             BackColor = Color.Transparent;
             ForeColor = Color.Black;
         }

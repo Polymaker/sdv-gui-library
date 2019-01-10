@@ -21,7 +21,7 @@ namespace Polymaker.SdvUI.Controls
         Rectangle ClientRectangle { get; }
         Rectangle DisplayRectangle { get; }
         Rectangle ScreenBounds { get; }
-        Rectangle GetDisplayRectangle();
+        Rectangle GetScreenBounds();
         Point PointToDisplay(Point localPoint);
         Point PointToLocal(Point displayPoint);
         ISdvContainer Parent { get; }

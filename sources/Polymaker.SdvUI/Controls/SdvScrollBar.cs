@@ -147,14 +147,14 @@ namespace Polymaker.SdvUI.Controls
             UpdateScrollButtonBounds();
         }
 
-        public override Rectangle GetDisplayRectangle()
+        public override Rectangle GetScreenBounds()
         {
             if (!IsContainerScrollBar)
-                return base.GetDisplayRectangle();
+                return base.GetScreenBounds();
 
             if (Parent != null)
             {
-                var parentBounds = Parent.GetDisplayRectangle();
+                var parentBounds = Parent.GetScreenBounds();
                 return new Rectangle(
                     parentBounds.X + X,
                     parentBounds.Y + Y,
@@ -182,7 +182,7 @@ namespace Polymaker.SdvUI.Controls
 
         private void UpdateScrollbarBounds_Old()
         {
-            var bound = GetDisplayRectangle();
+            var bound = GetScreenBounds();
 
             if (Orientation == Orientation.Vertical)
             {

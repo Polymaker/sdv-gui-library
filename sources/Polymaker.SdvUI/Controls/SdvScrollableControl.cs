@@ -121,8 +121,8 @@ namespace Polymaker.SdvUI.Controls
         public override Rectangle GetClientRectangle()
         {
             return new Rectangle(Padding.Left, Padding.Top,
-                Width - Padding.Horizontal - (VScrollVisible ? VScrollBar.Width : 0),
-                Height - Padding.Vertical - (HScrollVisible ? HScrollBar.Height : 0));
+                Width - (VScrollVisible ? VScrollBar.Width : 0),
+                Height - (HScrollVisible ? HScrollBar.Height : 0));
         }
 
         protected override void SetBoundsCore(int x, int y, int width, int height, ControlBounds specifiedBounds)
@@ -151,13 +151,13 @@ namespace Polymaker.SdvUI.Controls
                 newSize.Y = Math.Max(ctrl.Bounds.Bottom, newSize.Y);
             }
 
-            if (newSize.X > 0 || newSize.Y > 0)
-            {
-                //newSize.X += Padding.Horizontal;
-                //newSize.Y += Padding.Vertical;
-                newSize.X += Padding.Right;
-                newSize.Y += Padding.Bottom;
-            }
+            //if (newSize.X > 0 || newSize.Y > 0)
+            //{
+            //    //newSize.X += Padding.Horizontal;
+            //    //newSize.Y += Padding.Vertical;
+            //    newSize.X += Padding.Right;
+            //    newSize.Y += Padding.Bottom;
+            //}
 
             newSize.X = Math.Max(newSize.X, MinScrollSize.X);
             newSize.Y = Math.Max(newSize.Y, MinScrollSize.Y);
