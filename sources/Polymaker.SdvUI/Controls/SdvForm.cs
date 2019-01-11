@@ -144,7 +144,10 @@ namespace Polymaker.SdvUI.Controls
 
             if (HoveringControl != null && !string.IsNullOrEmpty(HoveringControl.TooltipText))
             {
-                IClickableMenu.drawHoverText(b, HoveringControl.TooltipText, StardewValley.Game1.smallFont);
+                if (!string.IsNullOrEmpty(HoveringControl.TooltipTitle))
+                    drawToolTip(b, HoveringControl.TooltipText, HoveringControl.TooltipTitle, null);
+                else
+                    drawHoverText(b, HoveringControl.TooltipText, StardewValley.Game1.smallFont);
             }
         }
 
@@ -166,14 +169,6 @@ namespace Polymaker.SdvUI.Controls
         {
             base.receiveLeftClick(x, y, playSound);
             EventManager.ReceiveLeftClick(x, y);
-            //ActiveControl = GetControlAtPosition(x, y);
-
-            //if (ActiveControl != null)
-            //{
-            //    var worldPoint = new Point(x, y);
-            //    var localPt = ActiveControl.PointToLocal(worldPoint);
-            //    ((ISdvCoreEvents)ActiveControl).OnMouseDown(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
-            //}
         }
 
         public override void leftClickHeld(int x, int y)
@@ -186,12 +181,6 @@ namespace Polymaker.SdvUI.Controls
         {
             base.releaseLeftClick(x, y);
             EventManager.ReleaseLeftClick(x, y);
-            //if (ActiveControl != null)
-            //{
-            //    var worldPoint = new Point(x, y);
-            //    var localPt = ActiveControl.PointToLocal(worldPoint);
-            //    ((ISdvCoreEvents)ActiveControl).OnMouseUp(new MouseEventArgs(localPt, worldPoint, MouseButtons.Left));
-            //}
         }
 
         public override void receiveRightClick(int x, int y, bool playSound = true)
@@ -204,50 +193,12 @@ namespace Polymaker.SdvUI.Controls
         {
             base.performHoverAction(x, y);
             EventManager.PerformHoverAction(x, y);
-            //SdvControl targetControl = null;
-
-            //if (ActiveControl != null && Cursor.LeftButton == ButtonState.Pressed)
-            //{
-            //    targetControl = ActiveControl;
-            //}
-            //else
-            //{
-            //    targetControl = GetControlAtPosition(x, y);
-            //}
-
-            //var overControl = GetControlAtPosition(x, y);
-
-            //if (targetControl != null)
-            //{
-            //    //if (HoveringControl != null && HoveringControl != targetControl)
-            //    //{
-                    
-            //    //}
-            //    HoveringControl = targetControl;
-            //    var worldPoint = new Point(x, y);
-            //    var localPt = targetControl.PointToLocal(worldPoint);
-            //    ((ISdvCoreEvents)targetControl).OnMouseMove(new MouseEventArgs(localPt, worldPoint, MouseButtons.None));
-            //}
         }
 
         public override void receiveScrollWheelAction(int direction)
         {
             base.receiveScrollWheelAction(direction);
             EventManager.ReceiveScrollWheelAction(direction);
-
-            //var curMouse = Cursor;
-            //var scrolldata = new MouseEventArgs(Cursor, direction);
-
-            //foreach (var control in GetVisibleControls())
-            //{
-            //    if (control.HandleScrollWheel(scrolldata))
-            //    {
-            //        control.PerformScrollWheel(scrolldata.Delta);
-            //        break;
-            //    }
-            //    else if (control.ForwardScrollWheel(scrolldata))
-            //        break;
-            //}
         }
 
         #endregion

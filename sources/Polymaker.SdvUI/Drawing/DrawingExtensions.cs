@@ -111,6 +111,8 @@ namespace Polymaker.SdvUI
 
         public static void DrawString(this SpriteBatch b, string text, SdvFont font, Color color, Vector2 pos)
         {
+            if (string.IsNullOrEmpty(text))
+                return;
             if (font.Bold)
             {
                 //todo: draw shadow if combined
@@ -129,6 +131,8 @@ namespace Polymaker.SdvUI
 
         public static void DrawString(this SpriteBatch b, string text, SdvFont font, Color color, Rectangle rect, ContentAlignment textAlign)
         {
+            if (string.IsNullOrEmpty(text))
+                return;
             var textSize = font.MeasureString(text);
             var correctedBounds = LayoutHelper.GetAlignedBounds(rect, textSize, textAlign);
             DrawString(b, text, font, color, new Vector2(correctedBounds.X, correctedBounds.Y));

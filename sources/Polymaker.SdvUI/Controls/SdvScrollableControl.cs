@@ -96,7 +96,7 @@ namespace Polymaker.SdvUI.Controls
 
             if(Enabled && (VScrollVisible || HScrollVisible))
             {
-                (VScrollVisible ? VScrollBar : HScrollBar).PerformScrollWheel(delta);
+                (VScrollVisible ? VScrollBar : HScrollBar).ProcessEvent(Events.SdvEvents.ScrollWheel, delta);
             }
         }
 
@@ -104,19 +104,6 @@ namespace Polymaker.SdvUI.Controls
         {
             return Enabled && (VScrollVisible || HScrollVisible) && DisplayRectangle.Contains(data.Location);
         }
-
-        //public override bool ForwardScrollWheel(MouseEventArgs data)
-        //{
-        //    var baseResult = base.ForwardScrollWheel(data);
-
-
-        //    if (!baseResult && VScrollVisible && ScreenBounds.Contains(data.DisplayLocation))
-        //    {
-        //        VScrollBar.PerformScrollWheel(data.Delta);
-        //        return true;
-        //    }
-        //    return baseResult;
-        //}
 
         public override Rectangle GetClientRectangle()
         {

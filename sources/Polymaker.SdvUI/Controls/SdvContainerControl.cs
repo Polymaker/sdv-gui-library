@@ -54,28 +54,6 @@ namespace Polymaker.SdvUI.Controls
             return GetControlAtPosition(this, position.X, position.Y, localPoint);
         }
 
-        public override bool ForwardScrollWheel(MouseEventArgs data)
-        {
-            var localPt = PointToLocal(data.DisplayLocation);
-            var pointInClient = ClientRectangle.Contains(localPt);
-
-            foreach (var control in GetVisibleControls())
-            {
-                if (!(pointInClient || !Controls.Contains(control)))
-                    continue;
-                var localData = data.ToLocal(control);
-                if (control.HandleScrollWheel(localData))
-                {
-                    control.PerformScrollWheel(data.Delta);
-                    return true;
-                }
-                else if (control.ForwardScrollWheel(localData))
-                    return true;
-            }
-
-            return base.ForwardScrollWheel(data);
-        }
-
         internal static SdvControl GetControlAtPosition(ISdvContainer container, int x, int y, bool localPoint = false)
         {
             
@@ -87,8 +65,9 @@ namespace Polymaker.SdvUI.Controls
             }
             Point localPt = container.PointToLocal(new Point(x, y));
             var pointInClient = container.ClientRectangle.Contains(localPt);
+            var visibleControls = container.GetVisibleControls();
 
-            foreach (var ctrl in container.GetVisibleControls())
+            foreach (var ctrl in visibleControls.Reverse())
             {
                 if (ctrl.Visible && ctrl.ScreenBounds.Contains(x, y) && (pointInClient || !container.Controls.Contains(ctrl)))
                 {

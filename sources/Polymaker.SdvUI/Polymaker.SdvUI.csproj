@@ -68,6 +68,7 @@
     <Compile Include="Controls\IScrollableContainer.cs" />
     <Compile Include="Controls\ISdvForm.cs" />
     <Compile Include="Controls\SdvCheckbox.cs" />
+    <Compile Include="Controls\SdvComboBox.cs" />
     <Compile Include="Drawing\ContentAlignment.cs" />
     <Compile Include="Drawing\ControlBounds.cs" />
     <Compile Include="Controls\Events\ControlsChangedEventArgs.cs" />

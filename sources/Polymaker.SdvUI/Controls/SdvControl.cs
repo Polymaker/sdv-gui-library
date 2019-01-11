@@ -136,6 +136,8 @@ namespace Polymaker.SdvUI.Controls
 
         public string TooltipText { get; set; }
 
+        public string TooltipTitle { get; set; }
+
         public event EventHandler FontChanged;
         public event EventHandler TextChanged;
 
@@ -329,6 +331,7 @@ namespace Polymaker.SdvUI.Controls
 
         private Color _BackColor = Color.Transparent;
         private Color _ForeColor = Color.Black;
+        private bool _Enabled = true;
 
         public Color BackColor
         {
@@ -358,6 +361,8 @@ namespace Polymaker.SdvUI.Controls
 
         public event EventHandler BackColorChanged;
         public event EventHandler ForeColorChanged;
+        public event EventHandler GotFocus;
+        public event EventHandler LostFocus;
 
         protected virtual void OnBackColorChanged(EventArgs e)
         {
@@ -368,8 +373,6 @@ namespace Polymaker.SdvUI.Controls
         {
             ForeColorChanged?.Invoke(this, e);
         }
-
-        private bool _Enabled = true;
 
         public bool Enabled
         {
@@ -393,6 +396,16 @@ namespace Polymaker.SdvUI.Controls
         public bool Focused { get; private set; }
 
         public bool MouseOver => Visible && DisplayRectangle.Contains(CursorPosition);
+
+        protected virtual void OnGotFocus(EventArgs e)
+        {
+            GotFocus?.Invoke(this, e);
+        }
+
+        protected virtual void OnLostFocus(EventArgs e)
+        {
+            LostFocus?.Invoke(this, e);
+        }
 
         #region Size & Bounds Management
 
@@ -441,6 +454,7 @@ namespace Polymaker.SdvUI.Controls
         public event EventHandler<MouseEventArgs> MouseMove;
         public event EventHandler MouseEnter;
         public event EventHandler MouseLeave;
+        public event EventHandler Click;
         public event EventHandler<int> ScrollWheel;
 
         protected virtual void OnMouseDown(MouseEventArgs e)
@@ -478,41 +492,19 @@ namespace Polymaker.SdvUI.Controls
             ScrollWheel?.Invoke(this, delta);
         }
 
+        protected virtual void OnClick(EventArgs e)
+        {
+            Click?.Invoke(this, e);
+        }
+
         public virtual bool HandleScrollWheel(MouseEventArgs data)
         {
             return false;
         }
 
-        public virtual bool ForwardScrollWheel(MouseEventArgs data)
-        {
-            return false;
-        }
-
-        internal void PerformScrollWheel(int delta)
-        {
-            OnScrollWheel(delta);
-        }
-
         #endregion
 
-        public event EventHandler GotFocus;
-        public event EventHandler LostFocus;
-        public event EventHandler Click;
-
-        protected virtual void OnGotFocus(EventArgs e)
-        {
-            GotFocus?.Invoke(this, e);
-        }
-
-        protected virtual void OnLostFocus(EventArgs e)
-        {
-            LostFocus?.Invoke(this, e);
-        }
-
-        protected virtual void OnClick(EventArgs e)
-        {
-            Click?.Invoke(this, e);
-        }
+        #region Drawing
 
         protected virtual void OnDrawBackground(SdvGraphics g)
         {
@@ -536,6 +528,8 @@ namespace Polymaker.SdvUI.Controls
                 }
             }
         }
+
+        #endregion
 
         private Vector2[] MouseButtonsDownPos = new Vector2[4];
 
@@ -600,6 +594,11 @@ namespace Polymaker.SdvUI.Controls
                         break;
                     }
             }
+        }
+
+        public SdvControl()
+        {
+            _Font = new SdvFont(Game1.smallFont, false, true);
         }
 
         ~SdvControl()

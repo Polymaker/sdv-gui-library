@@ -101,7 +101,7 @@ namespace Polymaker.SdvUI.Controls
         public SdvLabel()
         {
             _AutoSize = true;
-            Font = new SdvFont(Game1.smallFont, false, true);
+            
             BackColor = Color.Transparent;
             ForeColor = Color.Black;
         }
