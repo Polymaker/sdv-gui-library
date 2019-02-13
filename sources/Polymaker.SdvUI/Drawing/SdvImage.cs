@@ -50,18 +50,7 @@ namespace Polymaker.SdvUI
 
     public static class SdvImages
     {
-        //private static SdvImage _ButtonTexture;
-
-        //public static SdvImage ButtonTexture
-        //{
-        //    get
-        //    {
-        //        if (_ButtonTexture == null && Game1.mouseCursors != null)
-        //            _ButtonTexture = new SdvImage(Game1.mouseCursors, new Rectangle(432, 439, 9, 9));
-
-        //        return _ButtonTexture;
-        //    }
-        //}
+       
         public static SdvImage ButtonTexture => new SdvImage(Game1.mouseCursors, new Rectangle(432, 439, 9, 9));
 
         public static SdvImage UpArrow => new SdvImage(Game1.mouseCursors, new Rectangle(421, 459, 11, 12));

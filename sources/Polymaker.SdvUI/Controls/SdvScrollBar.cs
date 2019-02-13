@@ -13,6 +13,8 @@ namespace Polymaker.SdvUI.Controls
     {
         private int _MaxValue;
         private int _Value;
+        private int _ScrollButtonSize;
+        private float _ScrollButtonRatio;
         private bool IsContainerScrollBar;
 
         private Rectangle UpArrowBounds;
@@ -21,6 +23,7 @@ namespace Polymaker.SdvUI.Controls
         private Rectangle ScrollbarButtonBounds;
 
         private const int SCROLLBAR_SIZE = 44;
+        public const int SCROLLBUTTON_SIZE = 40;
         private const int TRACK_SIZE = 24;
 
         public Orientation Orientation { get; private set; }
@@ -49,6 +52,7 @@ namespace Polymaker.SdvUI.Controls
                 if (value != _MaxValue)
                 {
                     _MaxValue = value;
+                    _ScrollButtonRatio = 1f;
                     if (Value > value)
                         Value = value;
                     AdjustMaxValue();
@@ -88,6 +92,24 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        public float ScrollButtonRatio
+        {
+            get => _ScrollButtonRatio;
+            set
+            {
+                if (_ScrollButtonRatio != value)
+                {
+                    if (value < 1f && value > 0f)
+                    {
+                        _ScrollButtonRatio = value;
+                        UpdateScrollButtonBounds();
+                    }
+                }
+            }
+        }
+
+        private int TrackBarLength => Orientation == Orientation.Vertical ? ScrollbarTrackBounds.Height : ScrollbarTrackBounds.Width;
+
         public bool WheelScrollLarge { get; set; }
 
         public string ButtonClickSound { get; set; }
@@ -100,6 +122,7 @@ namespace Polymaker.SdvUI.Controls
         {
             Orientation = orientation;
             _MaxValue = 1;
+            _ScrollButtonRatio = 1f;
             SmallChange = 8;
             LargeChange = 32;
             if (Orientation == Orientation.Horizontal)
@@ -180,28 +203,12 @@ namespace Polymaker.SdvUI.Controls
             _MaxValue = (int)Math.Ceiling(_MaxValue / (double)LargeChange) * LargeChange;
         }
 
-        private void UpdateScrollbarBounds_Old()
+        public void SetScrollInfo(int contentSize, int viewSize)
         {
-            var bound = GetScreenBounds();
+            MaxValue = contentSize - viewSize;
 
-            if (Orientation == Orientation.Vertical)
-            {
-                UpArrowBounds = new Rectangle(bound.X, bound.Y, 44, 48);
-                DownArrowBounds = new Rectangle(bound.X, bound.Bottom - 48, 44, 48);
-                ScrollbarTrackBounds = new Rectangle(bound.X + 12, UpArrowBounds.Bottom + 4, TRACK_SIZE, Height - (UpArrowBounds.Height + 4) * 2);
-
-                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 24, 40);
-                ScrollbarButtonBounds.Y += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height));
-            }
-            else
-            {
-                UpArrowBounds = new Rectangle(bound.X, bound.Y, 48, 44);
-                DownArrowBounds = new Rectangle(bound.Right - 48, bound.Y, 48, 44);
-                ScrollbarTrackBounds = new Rectangle(UpArrowBounds.Right + 4, bound.Y + 11, Width - (UpArrowBounds.Width + 4) * 2 , TRACK_SIZE);
-
-                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 40, 24);
-                ScrollbarButtonBounds.X += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Width));
-            }
+            if (contentSize > viewSize)
+                ScrollButtonRatio = viewSize / (float)contentSize;
         }
 
         private void UpdateScrollbarBounds()
@@ -222,14 +229,15 @@ namespace Polymaker.SdvUI.Controls
 
         private void UpdateScrollButtonBounds()
         {
+            var scrollBtnSize = _ScrollButtonRatio != 1f ? (int)Math.Round(TrackBarLength * _ScrollButtonRatio) : SCROLLBUTTON_SIZE;
             if (Orientation == Orientation.Vertical)
             {
-                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 24, 40);
+                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 24, scrollBtnSize);
                 ScrollbarButtonBounds.Y += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Height - ScrollbarButtonBounds.Height));
             }
             else
             {
-                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, 40, 24);
+                ScrollbarButtonBounds = new Rectangle(ScrollbarTrackBounds.X, ScrollbarTrackBounds.Y, scrollBtnSize, 24);
                 ScrollbarButtonBounds.X += (int)((Value / (float)MaxValue) * (ScrollbarTrackBounds.Width - ScrollbarButtonBounds.Width));
             }
         }

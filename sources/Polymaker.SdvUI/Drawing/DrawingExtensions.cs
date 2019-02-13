@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Polymaker.SdvUI.Controls;
 using Polymaker.SdvUI.Utilities;
 using StardewValley;
+using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
@@ -113,7 +114,11 @@ namespace Polymaker.SdvUI
         {
             if (string.IsNullOrEmpty(text))
                 return;
-            if (font.Bold)
+            if (font.IsSpriteText)
+            {
+                SpriteText.drawString(b, text, (int)pos.X, (int)pos.Y, 999, -1, 999, 1f, 0.1f);
+            }
+            else if (font.Bold)
             {
                 //todo: draw shadow if combined
                 Utility.drawBoldText(b, text, font.Sprite, pos, color, font.Scale);

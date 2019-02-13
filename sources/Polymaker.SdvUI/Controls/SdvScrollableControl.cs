@@ -181,8 +181,12 @@ namespace Polymaker.SdvUI.Controls
                     }
                 }
 
+
                 HScrollBar.MaxValue = Math.Max(ScrollSize.X - baseClientRect.Width, 1);
                 VScrollBar.MaxValue = Math.Max(ScrollSize.Y - baseClientRect.Height, 1);
+
+                //HScrollBar.SetScrollInfo(ScrollSize.X, baseClientRect.Width);
+                //VScrollBar.SetScrollInfo(ScrollSize.Y, baseClientRect.Height);
 
                 HScrollBar.SetBounds(0, Height - HScrollBar.Height, Width - (VScrollBar.Visible ? VScrollBar.Width : 0), 0, ControlBounds.Y | ControlBounds.Width);
                 VScrollBar.SetBounds(Width - VScrollBar.Width, 0, 0, Height - (HScrollBar.Visible ? HScrollBar.Height : 0), ControlBounds.X | ControlBounds.Height);
