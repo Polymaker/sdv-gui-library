@@ -106,6 +106,16 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+        internal void ClearAndDispose()
+        {
+            while (Controls.Any())
+            {
+                var current = Controls[0];
+                current.Dispose();
+                Controls.Remove(current);
+            }
+        }
+
         public bool Contains(SdvControl item)
         {
             return Controls.Contains(item);

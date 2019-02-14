@@ -12,25 +12,17 @@ namespace Polymaker.SdvUI.Controls.Events
 {
     public class SdvWindowEventRouter
     {
-        private SdvControl _ActiveControl;
         private SdvControl _HoveringControl;
         private SdvControl _MouseCapturingControl;
-        public SdvForm EventSource { get; }
+        public SdvForm Owner { get; }
 
         public SdvControl MouseCapturingControl
         {
             get => _MouseCapturingControl;
             private set => SetMouseCapturingControl(value);
         }
-        
-        public SdvControl ActiveControl
-        {
-            get => _ActiveControl;
-            private set
-            {
-                SetActiveControl(value);
-            }
-        }
+
+        public SdvControl ActiveControl => Owner.ActiveControl;
 
         public SdvControl HoveringControl
         {
@@ -51,9 +43,9 @@ namespace Polymaker.SdvUI.Controls.Events
             Input = (InputState)typeof(Game1).GetField("input", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null);
         }
 
-        public SdvWindowEventRouter(SdvForm eventSource)
+        public SdvWindowEventRouter(SdvForm owner)
         {
-            EventSource = eventSource;
+            Owner = owner;
             PrevMousePos = new Vector2(-1, -1);
         }
 
@@ -61,14 +53,19 @@ namespace Polymaker.SdvUI.Controls.Events
 
         public void ReceiveLeftClick(int x, int y)
         {
-            SdvControl target = MouseCapturingControl ?? EventSource.GetControlAtPosition(x, y);
+            SdvControl target = null;
 
-            if (MouseCapturingControl == null)
-                ActiveControl = target;
+            if (ActiveControl?.IsCapturingMouse ?? false)
+                target = ActiveControl;
+            else
+                target = Owner.GetControlAtPosition(x, y);
 
-            if (target != null)
+            if (!SetActiveControl(target))
+                return;
+
+            if (ActiveControl != null)
             {
-                target.ProcessEvent(SdvEvents.MouseDown, GetMouseEventArgs(target, x, y, MouseButtons.Left));
+                ActiveControl.ProcessEvent(SdvEvents.MouseDown, GetMouseEventArgs(target, x, y, MouseButtons.Left));
             }
         }
 
@@ -83,14 +80,14 @@ namespace Polymaker.SdvUI.Controls.Events
                 }
                 else
                 {
-                    ActiveControl = null;
+                    SetActiveControl(null);
                 }
             }
         }
 
         public void ReleaseLeftClick(int x, int y)
         {
-            SdvControl target = MouseCapturingControl ?? EventSource.GetControlAtPosition(x, y);
+            SdvControl target = MouseCapturingControl ?? Owner.GetControlAtPosition(x, y);
             if (target != null)
                 target.ProcessEvent(SdvEvents.MouseUp, GetMouseEventArgs(target, x, y, MouseButtons.Left));
 
@@ -103,14 +100,19 @@ namespace Polymaker.SdvUI.Controls.Events
 
         public void ReceiveRightClick(int x, int y)
         {
-            SdvControl target = MouseCapturingControl ?? EventSource.GetControlAtPosition(x, y);
+            SdvControl target = null;
 
-            if (MouseCapturingControl == null)
-                ActiveControl = target;
+            if (ActiveControl?.IsCapturingMouse ?? false)
+                target = ActiveControl;
+            else
+                target = Owner.GetControlAtPosition(x, y);
 
-            if (target != null)
+            if (!SetActiveControl(target))
+                return;
+
+            if (ActiveControl != null)
             {
-                target.ProcessEvent(SdvEvents.MouseDown, GetMouseEventArgs(target, x, y, MouseButtons.Right));
+                ActiveControl.ProcessEvent(SdvEvents.MouseDown, GetMouseEventArgs(target, x, y, MouseButtons.Right));
             }
         }
 
@@ -125,14 +127,14 @@ namespace Polymaker.SdvUI.Controls.Events
                 }
                 else
                 {
-                    ActiveControl = null;
+                    SetActiveControl(null);
                 }
             }
         }
 
         public void ReleaseRightClick(int x, int y)
         {
-            SdvControl target = MouseCapturingControl ?? EventSource.GetControlAtPosition(x, y);
+            SdvControl target = MouseCapturingControl ?? Owner.GetControlAtPosition(x, y);
             if (target != null)
                 target.ProcessEvent(SdvEvents.MouseUp, GetMouseEventArgs(target, x, y, MouseButtons.Right));
 
@@ -158,7 +160,7 @@ namespace Polymaker.SdvUI.Controls.Events
                 }
                 else
                 {
-                    HoveringControl = EventSource.GetControlAtPosition(x, y);
+                    HoveringControl = Owner.GetControlAtPosition(x, y);
                 }
 
                 if (HoveringControl != null)
@@ -234,7 +236,7 @@ namespace Polymaker.SdvUI.Controls.Events
         {
             if (ActiveControl != null && (ActiveControl.Disposed || ActiveControl.FindForm() == null))
             {
-                ActiveControl = null;
+                SetActiveControl(null);
             }
 
             if (MouseCapturingControl != null && (MouseCapturingControl.Disposed || MouseCapturingControl.FindForm() == null))
@@ -244,18 +246,19 @@ namespace Polymaker.SdvUI.Controls.Events
             }
         }
 
-        private void SetActiveControl(SdvControl value)
+        private bool SetActiveControl(SdvControl value)
         {
-            if (value != ActiveControl)
+            if (value != null)
             {
-                if (ActiveControl != null && !ActiveControl.Disposed)
-                    ActiveControl.ProcessEvent(SdvEvents.FocusChanged, false);
-
-                _ActiveControl = value;
-
-                if (ActiveControl != null)
-                    ActiveControl.ProcessEvent(SdvEvents.FocusChanged, true);
+                if (value.Parent != null)
+                {
+                    value.Parent.ActiveControl = value;
+                    return Owner.ActiveControl == value;
+                }
+                return false;
             }
+
+            return Owner.SetActiveControlInternal(value);
         }
 
         private void SetHoverControl(SdvControl value)
@@ -263,12 +266,12 @@ namespace Polymaker.SdvUI.Controls.Events
             if (value != HoveringControl)
             {
                 if (HoveringControl != null && !HoveringControl.Disposed)
-                    HoveringControl.ProcessEvent(SdvEvents.MouseLeave, false);
+                    HoveringControl.ProcessEvent(SdvEvents.MouseLeave, null);
 
                 _HoveringControl = value;
 
-                if (ActiveControl != null)
-                    ActiveControl.ProcessEvent(SdvEvents.FocusChanged, true);
+                if (value != null)
+                    value.ProcessEvent(SdvEvents.MouseEnter, null);
             }
         }
 
@@ -276,13 +279,13 @@ namespace Polymaker.SdvUI.Controls.Events
         {
             if (value != MouseCapturingControl)
             {
-                if (MouseCapturingControl != null && !MouseCapturingControl.Disposed)
-                    MouseCapturingControl.IsCapturingMouse = false;
+                //if (MouseCapturingControl != null && !MouseCapturingControl.Disposed)
+                //    MouseCapturingControl.IsCapturingMouse = false;
 
                 _MouseCapturingControl = value;
 
-                if (value != null)
-                    value.IsCapturingMouse = true;
+                //if (value != null)
+                //    value.IsCapturingMouse = true;
             }
         }
     }

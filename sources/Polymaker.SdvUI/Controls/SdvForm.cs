@@ -12,22 +12,38 @@ using System.Threading.Tasks;
 
 namespace Polymaker.SdvUI.Controls
 {
-    public class SdvForm : IClickableMenu, ISdvContainer
+    public class SdvForm : IClickableMenu, ISdvContainer, IDisposable
     {
         private Padding _Padding = Padding.Empty;
-        private Point _ScrollOffset;
         private SdvWindowEventRouter EventManager;
 
-        public SdvControl ActiveControl => EventManager.ActiveControl;
+        //public SdvControl ActiveControl => EventManager.ActiveControl;
+
+        private SdvControl _ActiveControl;
+
+        public SdvControl ActiveControl
+        {
+            get => _ActiveControl;
+            set => SetActiveControl(value);
+        }
+
         public SdvControl HoveringControl => EventManager.HoveringControl;
 
         public SdvControlCollection Controls { get; }
 
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get => true; set { } }
 
-        public bool Visible { get; set; } = true;
+        public bool Visible
+        {
+            get => IsActiveMenu() || IsCurrentGameMenuPage();
+            set { }
+        }
+
+        public bool Disposed { get; private set; }
 
         public MouseState Cursor => EventManager.LastMouseState;
+
+        #region Size & Position handling
 
         public int X
         {
@@ -112,6 +128,27 @@ namespace Polymaker.SdvUI.Controls
             return Bounds;
         }
 
+        public Point PointToDisplay(Point localPoint)
+        {
+            var db = GetScreenBounds();
+            return new Point(db.X + localPoint.X, db.Y + localPoint.Y);
+        }
+
+        public Point PointToLocal(Point displayPoint)
+        {
+            var db = GetScreenBounds();
+            return new Point(displayPoint.X - db.X, displayPoint.Y - db.Y);
+        }
+
+        #endregion
+
+        #region Events
+
+        //public event EventArgs
+
+        #endregion
+
+
         public ISdvContainer Parent => null;
 
         public static readonly Padding GameMenuPadding = new Padding(16, 80, 16, 16);
@@ -122,14 +159,33 @@ namespace Polymaker.SdvUI.Controls
         {
             Controls = new SdvControlCollection(this);
             EventManager = new SdvWindowEventRouter(this);
-            _ScrollOffset = Point.Zero;
         }
 
         public SdvForm(int x, int y, int width, int height, bool showUpperRightCloseButton = false) : base(x, y, width, height, showUpperRightCloseButton)
         {
             Controls = new SdvControlCollection(this);
             EventManager = new SdvWindowEventRouter(this);
-            _ScrollOffset = Point.Zero;
+        }
+
+        ~SdvForm()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            if (!Disposed)
+            {
+                Controls.ClearAndDispose();
+                OnDispose();
+                Disposed = true;
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        protected virtual void OnDispose()
+        {
+
         }
 
         public override void draw(SpriteBatch b)
@@ -149,18 +205,6 @@ namespace Polymaker.SdvUI.Controls
                 else
                     drawHoverText(b, HoveringControl.TooltipText, StardewValley.Game1.smallFont);
             }
-        }
-
-        public Point PointToDisplay(Point localPoint)
-        {
-            var db = GetScreenBounds();
-            return new Point(db.X + localPoint.X, db.Y + localPoint.Y);
-        }
-
-        public Point PointToLocal(Point displayPoint)
-        {
-            var db = GetScreenBounds();
-            return new Point(displayPoint.X - db.X, displayPoint.Y - db.Y);
         }
 
         #region Event Redirection
@@ -203,6 +247,8 @@ namespace Polymaker.SdvUI.Controls
 
         #endregion
 
+        #region ISdvContainer
+
         public SdvControl GetControlAtPosition(int x, int y)
         {
             return SdvContainerControl.GetControlAtPosition(this, x, y);
@@ -217,5 +263,86 @@ namespace Polymaker.SdvUI.Controls
         {
             return Controls.Where(c => c.Visible);
         }
+
+        internal void SetActiveControl(SdvControl value)
+        {
+            if (value == _ActiveControl)
+            {
+                if (value == null || value.Focused)
+                    return;
+            }
+
+            if (value != null && !Controls.Contains(value))
+                throw new ArgumentException("The specified control is not owned by this form.");
+
+            SetActiveControlInternal(value);
+        }
+        
+        internal bool SetActiveControlInternal(SdvControl value)
+        {
+            if (_ActiveControl == value)
+                return true;
+            
+            if (_ActiveControl != null)
+            {
+                if (!_ActiveControl.TryRemoveFocus())
+                    return false;
+
+                _ActiveControl.ProcessEvent(SdvEvents.FocusChanged, false);
+                
+                if (_ActiveControl.Parent is SdvContainerControl container)
+                {
+                    _ActiveControl = null;
+                    container.SetActiveControlInternal(null);
+                }
+            }
+
+            _ActiveControl = value;
+
+            if (_ActiveControl != null)
+            {
+                _ActiveControl.ProcessEvent(SdvEvents.FocusChanged, false);
+            }
+            return true;
+        }
+
+        #endregion
+
+        public void Show()
+        {
+            if (StardewValley.Game1.activeClickableMenu == null)
+            {
+                StardewValley.Game1.activeClickableMenu = this;
+            }
+        }
+
+        public void Close()
+        {
+            if (IsActiveMenu() && readyToClose())
+            {
+                Dispose();
+                StardewValley.Game1.activeClickableMenu = null;
+            }
+        }
+
+        public bool IsActiveMenu()
+        {
+            if (StardewValley.Game1.activeClickableMenu == this)
+                return true;
+
+            return false;
+        }
+
+        public bool IsCurrentGameMenuPage()
+        {
+            if (StardewValley.Game1.activeClickableMenu is GameMenu gameMenu)
+            {
+                var currentPage = gameMenu.GetCurrentPage();
+                return (currentPage == this);
+            }
+            return false;
+        }
+
+        
     }
 }

@@ -11,6 +11,20 @@ namespace Polymaker.SdvUI.Controls
 {
     public class SdvContainerControl : SdvControl, ISdvContainer
     {
+        private SdvControl _ActiveControl;
+
+        public SdvControl ActiveControl
+        {
+            get => _ActiveControl;
+            set => SetActiveControl(value);
+        }
+
+        //public SdvControl ActiveControl
+        //{
+        //    get => ParentForm?.ActiveControl;
+        //    set => SetActiveControl(value);
+        //}
+
         public SdvControlCollection Controls { get; }
 
         public bool ContainsFocus
@@ -42,6 +56,11 @@ namespace Polymaker.SdvUI.Controls
             }
 
             return new Point(newSize.X + Padding.Horizontal, newSize.Y + Padding.Vertical);
+        }
+
+        public virtual bool Contains(SdvControl control)
+        {
+            return Controls.Contains(control);
         }
 
         public SdvControl GetControlAtPosition(int x, int y, bool localPoint = false)
@@ -82,6 +101,41 @@ namespace Polymaker.SdvUI.Controls
                 return control;
 
             return null;
+        }
+
+        internal void SetActiveControl(SdvControl value)
+        {
+            if (value == _ActiveControl)
+            {
+                if (value == null || value.Focused)
+                    return;
+            }
+
+            if (value != null && !Contains(value))
+                throw new ArgumentException("The specified control is not owned by this container.");
+
+            SetActiveControlInternal(value);
+        }
+
+        internal bool SetActiveControlInternal(SdvControl value)
+        {
+            if (Parent is SdvForm form)
+            {
+                if (form.SetActiveControlInternal(value))
+                {
+                    _ActiveControl = value;
+                    return true;
+                }
+            }
+            else if (Parent is SdvContainerControl container)
+            {
+                if (container.SetActiveControlInternal(value))
+                {
+                    _ActiveControl = value;
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected override void OnDraw(SdvGraphics g)

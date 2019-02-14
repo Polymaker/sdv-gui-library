@@ -12,7 +12,7 @@ namespace Polymaker.SdvUI.Controls
 
         public SdvPopupBase()
         {
-            SetVisibleCore(false);
+            
             ZIndex = 100;
         }
 

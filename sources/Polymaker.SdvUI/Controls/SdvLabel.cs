@@ -91,10 +91,6 @@ namespace Polymaker.SdvUI.Controls
 
         public Color DisabledForeColor { get; set; } = new Color(105, 105, 105);
 
-        //public bool DrawShadow { get => Font?.DrawShadow ?? false; set { if (Font != null) Font.DrawShadow = value; } }
-
-        //public float TextureScale { get; set; } = 4f;
-
         public event EventHandler AutoSizeChanged;
         public event EventHandler TextImageRelationChanged;
 

@@ -46,11 +46,20 @@ namespace Polymaker.SdvUI.Controls
                 return new Vector2(SpriteText.getWidthOfString(text), 
                     SpriteText.getHeightOfString(text));
             }
+
             var finalSize = Sprite.MeasureString(text) * Scale;
+
             if (!DrawShadow)
             {
                 finalSize.Y -= 3;
             }
+
+            if (Bold)
+            {
+                finalSize.X += 1;
+                finalSize.Y += 1;
+            }
+
             return finalSize;
         }
 

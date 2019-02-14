@@ -11,6 +11,7 @@ namespace Polymaker.SdvUI.Controls
     public interface ISdvContainer : ISdvUIComponent
     {
         //Point ScrollOffset { get; set; }
+        SdvControl ActiveControl { get; set; }
         SdvControlCollection Controls { get; }
         //Rectangle GetClientRectangle();
         IEnumerable<SdvControl> GetVisibleControls();

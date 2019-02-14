@@ -6,6 +6,7 @@ using Polymaker.SdvUI.Drawing;
 using StardewValley;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,12 +15,11 @@ namespace Polymaker.SdvUI.Controls
 {
     public class SdvControl : ISdvUIComponent, IDisposable
     {
-        //public static SpriteFont DefaultFont => Game1.smallFont;
+
+        #region Parent handling
 
         private ISdvContainer _Parent;
-
-        public bool Initialized { get; private set; }
-        public bool Disposed { get; private set; }
+        private SdvForm _ParentForm;
 
         public ISdvContainer Parent
         {
@@ -27,20 +27,33 @@ namespace Polymaker.SdvUI.Controls
             set => SetParent(value);
         }
 
-        public MouseState Cursor => FindForm()?.Cursor ?? Mouse.GetState();
-
-        public Point CursorPosition
+        public SdvForm ParentForm
         {
             get
             {
-                return PointToLocal(new Point(Cursor.X, Cursor.Y));
+                //if (Parent is SdvForm form)
+                //    return form;
+                //else if (Parent is SdvControl parentControl)
+                //    return parentControl.ParentForm;
+                //return null;
+                return _ParentForm;
             }
         }
+
+        public event EventHandler ParentChanged;
 
         internal void SetParent(ISdvContainer value, bool fromCollection = false)
         {
             if (value != _Parent)
             {
+                if (IsActiveControl)
+                    Parent.ActiveControl = null;
+
+                _ParentForm = (value as SdvControl)?.ParentForm;
+
+                if (value != null && Disposed)
+                    throw new ObjectDisposedException(GetType().Name);
+
                 if (!fromCollection)
                 {
                     if (value != null && !value.Controls.ValidateCanAdd(this))
@@ -57,7 +70,8 @@ namespace Polymaker.SdvUI.Controls
                 if (!fromCollection && _Parent != null && !_Parent.Controls.Contains(this))
                     _Parent.Controls.Add(this);
 
-                if (!Initialized && value != null && FindForm() != null)
+                _ParentForm = FindForm();
+                if (!Initialized && value != null && _ParentForm != null)
                     Initialize();
 
                 OnParentChanged(EventArgs.Empty);
@@ -78,32 +92,39 @@ namespace Polymaker.SdvUI.Controls
             return null;
         }
 
-        public event EventHandler ParentChanged;
-
         protected virtual void OnParentChanged(EventArgs e)
         {
             ParentChanged?.Invoke(this, e);
         }
 
-        private void Initialize()
-        {
-            
-            Initialized = true;
-            OnInitialize();
+        #endregion
 
-            if (Width == 0 || Height == 0)
+        #region Cursor handling
+
+        private Vector2[] MouseButtonsDownPos = new Vector2[4];
+        private byte MouseButtonStates;
+
+        public MouseState Cursor => ParentForm?.Cursor ?? Mouse.GetState();
+
+        public Point CursorPosition
+        {
+            get
             {
-                var minSize = GetPreferredSize();
-                minSize.X = Math.Max(Width, minSize.X);
-                minSize.Y = Math.Max(Height, minSize.Y);
-                Size = minSize;
+                return PointToLocal(new Point(Cursor.X, Cursor.Y));
             }
         }
 
-        protected virtual void OnInitialize()
-        {
+        public bool MouseOver => Visible && DisplayRectangle.Contains(CursorPosition);
 
+        public bool IsCapturingMouse => MouseButtonStates > 0;
+
+        public bool IsMouseButtonDown(MouseButtons button)
+        {
+            return (MouseButtonStates & (byte)button) == (byte)button;
+            //return MouseButtonStates[(int)button];
         }
+
+        #endregion
 
         #region Text related members
 
@@ -314,139 +335,6 @@ namespace Polymaker.SdvUI.Controls
             PropagateInvalidate();
         }
 
-        public virtual Rectangle GetClientRectangle()
-        {
-            return new Rectangle(Padding.Left, Padding.Top, Width - Padding.Horizontal,  Height - Padding.Vertical);
-        }
-
-        public Point PointToDisplay(Point localPoint)
-        {
-            return new Point(ScreenBounds.X + localPoint.X, ScreenBounds.Y + localPoint.Y);
-        }
-
-        public Point PointToLocal(Point displayPoint)
-        {
-            return new Point(displayPoint.X - ScreenBounds.X, displayPoint.Y - ScreenBounds.Y);
-        }
-
-        #endregion
-
-        private Color _BackColor = Color.Transparent;
-        private Color _ForeColor = Color.Black;
-        private bool _Enabled = true;
-
-        public Color BackColor
-        {
-            get => _BackColor;
-            set
-            {
-                if (value != _BackColor)
-                {
-                    _BackColor = value;
-                    OnBackColorChanged(EventArgs.Empty);
-                }
-            }
-        }
-
-        public Color ForeColor
-        {
-            get => _ForeColor;
-            set
-            {
-                if (value != _ForeColor)
-                {
-                    _ForeColor = value;
-                    OnForeColorChanged(EventArgs.Empty);
-                }
-            }
-        }
-
-        public event EventHandler BackColorChanged;
-        public event EventHandler ForeColorChanged;
-        public event EventHandler GotFocus;
-        public event EventHandler LostFocus;
-
-        protected virtual void OnBackColorChanged(EventArgs e)
-        {
-            BackColorChanged?.Invoke(this, e);
-        }
-
-        protected virtual void OnForeColorChanged(EventArgs e)
-        {
-            ForeColorChanged?.Invoke(this, e);
-        }
-
-        public bool Enabled
-        {
-            get
-            {
-                if (Parent != null && !Parent.Enabled)
-                    return false;
-                return _Enabled;
-            }
-            set
-            {
-                if (value != _Enabled)
-                {
-                    _Enabled = value;
-                }
-            }
-        }
-
-        private bool _Visible = true;
-
-        public bool Visible
-        {
-            get => _Visible;
-            set
-            {
-                if (value != _Visible)
-                {
-                    var args = new ValueChangingEventArgs<bool>(_Visible, value);
-                    OnVisibleChanging(args);
-                    if (!args.Cancel)
-                    {
-                        SetVisibleCore(value);
-                        OnVisibleChanged(EventArgs.Empty);
-                    }
-                }
-            }
-        }
-
-        protected virtual void SetVisibleCore(bool value)
-        {
-            _Visible = value;
-        }
-
-        public event EventHandler VisibleChanged;
-        public event EventHandler<ValueChangingEventArgs<bool>> VisibleChanging;
-
-        protected virtual void OnVisibleChanging(ValueChangingEventArgs<bool> args)
-        {
-            VisibleChanging?.Invoke(this, args);
-        }
-
-        protected virtual void OnVisibleChanged(EventArgs e)
-        {
-            VisibleChanged?.Invoke(this, e);
-        }
-
-        public bool Focused { get; private set; }
-
-        public bool MouseOver => Visible && DisplayRectangle.Contains(CursorPosition);
-
-        protected virtual void OnGotFocus(EventArgs e)
-        {
-            GotFocus?.Invoke(this, e);
-        }
-
-        protected virtual void OnLostFocus(EventArgs e)
-        {
-            LostFocus?.Invoke(this, e);
-        }
-
-        #region Size & Bounds Management
-
         public void SetBounds(int x, int y, int width, int height, ControlBounds specifiedBounds)
         {
             if (!specifiedBounds.HasFlag(ControlBounds.X))
@@ -480,6 +368,199 @@ namespace Polymaker.SdvUI.Controls
         protected virtual Point GetPreferredSize()
         {
             return Point.Zero;
+        }
+
+        public virtual Rectangle GetClientRectangle()
+        {
+            return new Rectangle(Padding.Left, Padding.Top, Width - Padding.Horizontal,  Height - Padding.Vertical);
+        }
+
+        public Point PointToDisplay(Point localPoint)
+        {
+            return new Point(ScreenBounds.X + localPoint.X, ScreenBounds.Y + localPoint.Y);
+        }
+
+        public Point PointToLocal(Point displayPoint)
+        {
+            return new Point(displayPoint.X - ScreenBounds.X, displayPoint.Y - ScreenBounds.Y);
+        }
+
+
+        #endregion
+
+        #region Colors management
+
+        private Color _BackColor = Color.Transparent;
+        private Color _ForeColor = Color.Black;
+
+        public Color BackColor
+        {
+            get => _BackColor;
+            set
+            {
+                if (value != _BackColor)
+                {
+                    _BackColor = value;
+                    OnBackColorChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        public Color ForeColor
+        {
+            get => _ForeColor;
+            set
+            {
+                if (value != _ForeColor)
+                {
+                    _ForeColor = value;
+                    OnForeColorChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        public event EventHandler BackColorChanged;
+        public event EventHandler ForeColorChanged;
+
+        protected virtual void OnBackColorChanged(EventArgs e)
+        {
+            BackColorChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnForeColorChanged(EventArgs e)
+        {
+            ForeColorChanged?.Invoke(this, e);
+        }
+
+        #endregion
+
+        #region Control state properties and methods
+
+        private bool _Enabled = true;
+        private bool _Visible = true;
+
+        public bool Enabled
+        {
+            get
+            {
+                if (Parent != null && !Parent.Enabled)
+                    return false;
+                return _Enabled;
+            }
+            set
+            {
+                if (value != _Enabled)
+                {
+                    _Enabled = value;
+                    OnEnabledChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        public bool Visible
+        {
+            get => _Visible;
+            set
+            {
+                if (value != _Visible)
+                {
+                    _Visible = value;
+                    if (!value && IsActiveControl)
+                        Parent.ActiveControl = null;
+                    OnVisibleChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        public bool Initialized { get; private set; }
+
+        public bool Disposed { get; private set; }
+
+        public event EventHandler EnabledChanged;
+        public event EventHandler VisibleChanged;
+
+        protected virtual void OnEnabledChanged(EventArgs e)
+        {
+            EnabledChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnVisibleChanged(EventArgs e)
+        {
+            VisibleChanged?.Invoke(this, e);
+        }
+
+        private void Initialize()
+        {
+
+            Initialized = true;
+            OnInitialize();
+
+            if (Width == 0 || Height == 0)
+            {
+                var minSize = GetPreferredSize();
+                minSize.X = Math.Max(Width, minSize.X);
+                minSize.Y = Math.Max(Height, minSize.Y);
+                Size = minSize;
+            }
+        }
+
+        protected virtual void OnInitialize()
+        {
+
+        }
+
+        #endregion
+
+        #region Activation/Focus management
+
+        public bool IsActiveControl => Parent?.ActiveControl == this;
+        public bool Focused { get; private set; }
+        //public bool Focusable { get; set; } = true;
+
+        //public event EventHandler Activated;
+        //public event EventHandler Deactivated;
+        public event EventHandler GotFocus;
+        public event EventHandler LostFocus;
+        public event CancelEventHandler Validating;
+
+        //protected virtual void OnActivate(EventArgs e)
+        //{
+        //    Activated?.Invoke(this, e);
+        //}
+
+        //protected virtual void OnDeactivate(EventArgs e)
+        //{
+        //    Deactivated?.Invoke(this, e);
+        //}
+
+        protected virtual void OnGotFocus(EventArgs e)
+        {
+            GotFocus?.Invoke(this, e);
+        }
+
+        protected virtual void OnLostFocus(EventArgs e)
+        {
+            LostFocus?.Invoke(this, e);
+        }
+
+        internal bool TryRemoveFocus()
+        {
+            var args = new CancelEventArgs();
+            OnValidating(args);
+            return !args.Cancel;
+        }
+
+        protected virtual void OnValidating(CancelEventArgs args)
+        {
+            
+        }
+
+        public void Select()
+        {
+            if (Parent != null)
+            {
+                Parent.ActiveControl = this;
+            }
         }
 
         #endregion
@@ -569,19 +650,6 @@ namespace Polymaker.SdvUI.Controls
 
         #endregion
 
-        #region Mouse handling
-
-        private Vector2[] MouseButtonsDownPos = new Vector2[4];
-        private bool[] MouseButtonStates = new bool[4];
-        public bool IsCapturingMouse { get; internal set; }
-
-        public bool IsMouseButtonDown(MouseButtons button)
-        {
-            return MouseButtonStates[(int)button];
-        }
-
-        #endregion
-
         internal void ProcessEvent(SdvEvents eventType, object data)
         {
             switch (eventType)
@@ -590,15 +658,14 @@ namespace Polymaker.SdvUI.Controls
                     {
                         var eventData = (MouseEventArgs)data;
                         MouseButtonsDownPos[(int)eventData.Buttons] = new Vector2(eventData.Location.X, eventData.Location.Y);
-                        MouseButtonStates[(int)eventData.Buttons] = true;
+                        MouseButtonStates |= (byte)eventData.Buttons;
                         OnMouseDown(eventData);
                         break;
                     }
                 case SdvEvents.MouseUp:
                     {
                         var eventData = (MouseEventArgs)data;
-                        MouseButtonStates[(int)eventData.Buttons] = false;
-
+                        MouseButtonStates ^= (byte)eventData.Buttons;
                         OnMouseUp(eventData);
 
                         var curPos = new Vector2(eventData.Location.X, eventData.Location.Y);
@@ -668,8 +735,15 @@ namespace Polymaker.SdvUI.Controls
                         SetParent(null, false);
                     _Parent = null;
                 }
+                OnDispose();
                 Disposed = true;
+                GC.SuppressFinalize(this);
             }
+        }
+
+        protected virtual void OnDispose()
+        {
+
         }
     }
 }

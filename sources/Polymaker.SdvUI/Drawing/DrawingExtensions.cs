@@ -114,13 +114,16 @@ namespace Polymaker.SdvUI
         {
             if (string.IsNullOrEmpty(text))
                 return;
+
             if (font.IsSpriteText)
             {
                 SpriteText.drawString(b, text, (int)pos.X, (int)pos.Y, 999, -1, 999, 1f, 0.1f);
             }
             else if (font.Bold)
             {
-                //todo: draw shadow if combined
+                if (font.DrawShadow)
+                    Utility.drawTextWithShadow(b, text, font.Sprite, new Vector2(pos.X + 1, pos.Y + 1), color, font.Scale);
+
                 Utility.drawBoldText(b, text, font.Sprite, pos, color, font.Scale);
             }
             else if (font.DrawShadow)

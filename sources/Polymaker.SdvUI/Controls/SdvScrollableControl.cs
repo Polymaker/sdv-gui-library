@@ -198,6 +198,11 @@ namespace Polymaker.SdvUI.Controls
             return base.GetVisibleControls().Concat(ScrollBars.Where(s => s.Visible));
         }
 
+        public override bool Contains(SdvControl control)
+        {
+            return base.Contains(control) || ScrollBars.Contains(control);
+        }
+
         protected override void OnDraw(SdvGraphics g)
         {
             var displayRect = ScreenBounds;
