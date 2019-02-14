@@ -31,7 +31,8 @@ namespace Polymaker.SdvUI.Controls
         {
             get
             {
-                return GetVisibleControls().Any(c => c.Focused || ((c as SdvContainerControl)?.ContainsFocus ?? false));
+                return ActiveControl?.Focused ?? false;
+                //return GetVisibleControls().Any(c => c.Focused || ((c as SdvContainerControl)?.ContainsFocus ?? false));
             }
         }
 

@@ -67,7 +67,6 @@
     <Compile Include="Controls\Events\ValueChangingEventArgs.cs" />
     <Compile Include="Controls\GridControl\SdvGridControl.cs" />
     <Compile Include="Controls\IScrollableContainer.cs" />
-    <Compile Include="Controls\ISdvForm.cs" />
     <Compile Include="Controls\SdvCheckbox.cs" />
     <Compile Include="Controls\SdvComboBox.cs" />
     <Compile Include="Controls\SdvPopupBase.cs" />
@@ -95,6 +94,7 @@
     <Compile Include="Drawing\SdvImage.cs" />
     <Compile Include="Drawing\TextImageRelation.cs" />
     <Compile Include="Drawing\DrawingExtensions.cs" />
+    <Compile Include="Utilities\GameMenuHelper.cs" />
     <Compile Include="Utilities\GraphicClip.cs" />
     <Compile Include="Utilities\LayoutHelper.cs" />
   </ItemGroup>
