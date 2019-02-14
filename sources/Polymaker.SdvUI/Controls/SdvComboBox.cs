@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Polymaker.SdvUI.Drawing;
+using StardewValley;
 
 namespace Polymaker.SdvUI.Controls
 {
@@ -22,7 +23,6 @@ namespace Polymaker.SdvUI.Controls
         private int ItemHeight;
         private string _DisplayMember;
         private string _ValueMember;
-
 
         public IList DataSource
         {
@@ -131,6 +131,8 @@ namespace Polymaker.SdvUI.Controls
 
         public bool DroppedDown { get; set; }
 
+        public string NullValueText { get; set; }
+
         public event EventHandler SelectedIndexChanged;
 
         public SdvComboBox()
@@ -185,33 +187,33 @@ namespace Polymaker.SdvUI.Controls
 
         protected override void OnDraw(SdvGraphics g)
         {
+            g.DrawTextureBox(DropDownBgImage, new Rectangle(0, 0, Width - DropDownArrowBounds.Width, Height), 4f);
             g.DrawImage(DropDownArrowImage, DropDownArrowBounds);
 
-            if (SelectedItem != null)
+            if (SelectedItem != null || !string.IsNullOrEmpty(NullValueText))
             {
-                var text = GetDisplayText(SelectedItem);
-                g.DrawString(text, Font, ForeColor, new Rectangle(0, 0, Width - DropDownArrowBounds.Width, Height), ContentAlignment.MiddleLeft);
+                var text = SelectedItem != null ? GetDisplayText(SelectedItem) : NullValueText;
+                g.DrawString(text, Font, ForeColor, new Rectangle(8, 0, Width - DropDownArrowBounds.Width - 8, Height), ContentAlignment.MiddleLeft);
             }
 
             if (DroppedDown && DataSource != null)
             {
                 int currentY = Height;
-                int dropDownHeight = Math.Min(1, DataSource.Count) * ItemHeight;
+                int dropDownHeight = 8 + Math.Max(1, DataSource.Count) * ItemHeight;
                 g.DrawTextureBox(DropDownBgImage, new Rectangle(0, currentY, Width, dropDownHeight), 4f);
+                currentY += 4;
 
                 for (int i = 0; i < DataSource.Count; i++)
                 {
-                    var itemBounds = new Rectangle(0, currentY, Width, ItemHeight);
+                    var itemBounds = new Rectangle(4, currentY, Width - 8, ItemHeight);
+                    var textBounds = new Rectangle(8, currentY, Width - 8, ItemHeight);
 
                     if (i == SelectedIndex)
                     {
                         g.FillRect(Color.Wheat, itemBounds);
-                        //g.DrawString(GetDisplayText(DataSource[i]), Font, Color.White, itemBounds, ContentAlignment.MiddleLeft);
                     }
-                    else
-                    {
-                        g.DrawString(GetDisplayText(DataSource[i]), Font, ForeColor, itemBounds, ContentAlignment.MiddleLeft);
-                    }
+
+                    g.DrawString(GetDisplayText(DataSource[i]), Font, ForeColor, textBounds, ContentAlignment.MiddleLeft);
                     currentY += ItemHeight;
                 }
             }
@@ -316,9 +318,13 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
-            if (Enabled && DropDownArrowBounds.Contains(CursorPosition) && DataSource != null)
+            if (Enabled /*&& DropDownArrowBounds.Contains(CursorPosition)*/ && DataSource != null)
             {
-                DroppedDown = true;
+                if (!DroppedDown)
+                {
+                    Game1.playSound("shwip");
+                }
+                DroppedDown = !DroppedDown;
             }
         }
 

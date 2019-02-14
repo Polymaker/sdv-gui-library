@@ -87,15 +87,17 @@ namespace Polymaker.SdvUI.Controls
 
         private void Initialize()
         {
+            
+            Initialized = true;
+            OnInitialize();
+
             if (Width == 0 || Height == 0)
             {
                 var minSize = GetPreferredSize();
                 minSize.X = Math.Max(Width, minSize.X);
-                minSize.Y = Math.Max(Width, minSize.Y);
+                minSize.Y = Math.Max(Height, minSize.Y);
                 Size = minSize;
             }
-            Initialized = true;
-            OnInitialize();
         }
 
         protected virtual void OnInitialize()
@@ -391,7 +393,43 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        public bool Visible { get; set; } = true;
+        private bool _Visible = true;
+
+        public bool Visible
+        {
+            get => _Visible;
+            set
+            {
+                if (value != _Visible)
+                {
+                    var args = new ValueChangingEventArgs<bool>(_Visible, value);
+                    OnVisibleChanging(args);
+                    if (!args.Cancel)
+                    {
+                        SetVisibleCore(value);
+                        OnVisibleChanged(EventArgs.Empty);
+                    }
+                }
+            }
+        }
+
+        protected virtual void SetVisibleCore(bool value)
+        {
+            _Visible = value;
+        }
+
+        public event EventHandler VisibleChanged;
+        public event EventHandler<ValueChangingEventArgs<bool>> VisibleChanging;
+
+        protected virtual void OnVisibleChanging(ValueChangingEventArgs<bool> args)
+        {
+            VisibleChanging?.Invoke(this, args);
+        }
+
+        protected virtual void OnVisibleChanged(EventArgs e)
+        {
+            VisibleChanged?.Invoke(this, e);
+        }
 
         public bool Focused { get; private set; }
 
@@ -531,7 +569,18 @@ namespace Polymaker.SdvUI.Controls
 
         #endregion
 
+        #region Mouse handling
+
         private Vector2[] MouseButtonsDownPos = new Vector2[4];
+        private bool[] MouseButtonStates = new bool[4];
+        public bool IsCapturingMouse { get; internal set; }
+
+        public bool IsMouseButtonDown(MouseButtons button)
+        {
+            return MouseButtonStates[(int)button];
+        }
+
+        #endregion
 
         internal void ProcessEvent(SdvEvents eventType, object data)
         {
@@ -541,12 +590,15 @@ namespace Polymaker.SdvUI.Controls
                     {
                         var eventData = (MouseEventArgs)data;
                         MouseButtonsDownPos[(int)eventData.Buttons] = new Vector2(eventData.Location.X, eventData.Location.Y);
+                        MouseButtonStates[(int)eventData.Buttons] = true;
                         OnMouseDown(eventData);
                         break;
                     }
                 case SdvEvents.MouseUp:
                     {
                         var eventData = (MouseEventArgs)data;
+                        MouseButtonStates[(int)eventData.Buttons] = false;
+
                         OnMouseUp(eventData);
 
                         var curPos = new Vector2(eventData.Location.X, eventData.Location.Y);

@@ -31,11 +31,11 @@ namespace Polymaker.SdvUI.Controls
             if (ButtonTexture != null)
             {
                 var mouseOver = DisplayRectangle.Contains(CursorPosition);
-                var pressed = Focused && Cursor.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-                var imgColor = pressed ? new Color(110, 110, 110) : (mouseOver ? Color.LightGray : Color.White);
-
+                var pressed = IsCapturingMouse && Cursor.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                var imgColor = pressed ? new Color(150, 150, 150) : (mouseOver ? Color.LightGray : Color.White);
+                
                 if (!Enabled)
-                    imgColor = new Color(150, 150, 150, 220);
+                    imgColor = new Color(120, 120, 120, 220);
 
                 if (IsTextureBox)
                 {

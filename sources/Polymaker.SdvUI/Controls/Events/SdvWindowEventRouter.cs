@@ -14,10 +14,14 @@ namespace Polymaker.SdvUI.Controls.Events
     {
         private SdvControl _ActiveControl;
         private SdvControl _HoveringControl;
-
+        private SdvControl _MouseCapturingControl;
         public SdvForm EventSource { get; }
 
-        public SdvControl MouseCapturingControl { get; private set; }
+        public SdvControl MouseCapturingControl
+        {
+            get => _MouseCapturingControl;
+            private set => SetMouseCapturingControl(value);
+        }
         
         public SdvControl ActiveControl
         {
@@ -72,8 +76,15 @@ namespace Polymaker.SdvUI.Controls.Events
         {
             if (ActiveControl != null && MouseCapturingControl == null)
             {
-                MouseCapturingControl = ActiveControl;
-                HeldMouseButton = MouseButtons.Left;
+                if (ActiveControl.IsMouseButtonDown(MouseButtons.Left))
+                {
+                    MouseCapturingControl = ActiveControl;
+                    HeldMouseButton = MouseButtons.Left;
+                }
+                else
+                {
+                    ActiveControl = null;
+                }
             }
         }
 
@@ -107,8 +118,15 @@ namespace Polymaker.SdvUI.Controls.Events
         {
             if (ActiveControl != null && MouseCapturingControl == null)
             {
-                MouseCapturingControl = ActiveControl;
-                HeldMouseButton = MouseButtons.Right;
+                if (ActiveControl.IsMouseButtonDown(MouseButtons.Right))
+                {
+                    MouseCapturingControl = ActiveControl;
+                    HeldMouseButton = MouseButtons.Right;
+                }
+                else
+                {
+                    ActiveControl = null;
+                }
             }
         }
 
@@ -251,6 +269,20 @@ namespace Polymaker.SdvUI.Controls.Events
 
                 if (ActiveControl != null)
                     ActiveControl.ProcessEvent(SdvEvents.FocusChanged, true);
+            }
+        }
+
+        private void SetMouseCapturingControl(SdvControl value)
+        {
+            if (value != MouseCapturingControl)
+            {
+                if (MouseCapturingControl != null && !MouseCapturingControl.Disposed)
+                    MouseCapturingControl.IsCapturingMouse = false;
+
+                _MouseCapturingControl = value;
+
+                if (value != null)
+                    value.IsCapturingMouse = true;
             }
         }
     }
