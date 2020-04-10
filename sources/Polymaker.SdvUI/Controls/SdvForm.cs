@@ -194,7 +194,7 @@ namespace Polymaker.SdvUI.Controls
 
             foreach (var control in Controls)
             {
-                if(control.Visible)
+                if (control.Visible)
                     control.PerformDraw(b);
             }
 

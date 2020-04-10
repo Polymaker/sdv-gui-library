@@ -46,7 +46,7 @@ namespace Polymaker.SdvUI.Controls
             return Controls.Where(c => c.Visible);
         }
 
-        protected override Point GetPreferredSize()
+        public override Point GetPreferredSize()
         {
             var newSize = Point.Zero;
 

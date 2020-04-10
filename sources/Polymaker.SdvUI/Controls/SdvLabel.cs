@@ -139,7 +139,7 @@ namespace Polymaker.SdvUI.Controls
             AdjustSizeIfNeeded();
         }
 
-        protected override Point GetPreferredSize()
+        public override Point GetPreferredSize()
         {
             var prefSize = Padding.Size;
             var textSize = Vector2.Zero;

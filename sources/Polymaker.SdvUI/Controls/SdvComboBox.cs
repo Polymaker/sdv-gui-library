@@ -21,8 +21,17 @@ namespace Polymaker.SdvUI.Controls
         private IList _DataSource;
         private Rectangle DropDownArrowBounds;
         private int ItemHeight;
+        private int MinimumWidth;
         private string _DisplayMember;
         private string _ValueMember;
+        private ComboBoxStyle _DropDownStyle;
+
+
+        public ComboBoxStyle DropDownStyle
+        {
+            get { return _DropDownStyle; }
+            set { _DropDownStyle = value; }
+        }
 
         public IList DataSource
         {
@@ -137,10 +146,13 @@ namespace Polymaker.SdvUI.Controls
 
         public SdvComboBox()
         {
-            if (DropDownArrowImage == null)
+            _DropDownStyle = ComboBoxStyle.Stardew;
+            Padding = new Padding(6, 8, 4, 2);
+            Height = 44;
+            if (DropDownArrowImage == null && Game1.mouseCursors != null)
             {
-                DropDownArrowImage = new SdvImage(StardewValley.Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(437, 450, 10, 11));
-                DropDownBgImage = new SdvImage(StardewValley.Game1.mouseCursors, new Rectangle(433, 451, 3, 3));
+                DropDownArrowImage = new SdvImage(Game1.mouseCursors, new Rectangle(437, 450, 10, 11));
+                DropDownBgImage = new SdvImage(Game1.mouseCursors, new Rectangle(433, 451, 3, 3));
             }
         }
 
@@ -155,7 +167,13 @@ namespace Polymaker.SdvUI.Controls
             if (Font != null)
             {
                 var textSize = Font.MeasureString("Qwerty");
-                ItemHeight = (int)textSize.Y;
+                ItemHeight = (int)textSize.Y + Padding.Vertical;
+
+                textSize = Font.MeasureString("W");
+
+                float scale = ItemHeight / 11f;
+                int arrowWidth = (int)(DropDownArrowImage.Size.X * scale);
+                MinimumWidth = (int)textSize.X + Padding.Horizontal + arrowWidth;
             }
         }
 
@@ -165,25 +183,33 @@ namespace Polymaker.SdvUI.Controls
             CalculateItemHeight();
         }
 
-        protected override Point GetPreferredSize()
+        public override Point GetPreferredSize()
         {
             var size = base.GetPreferredSize();
-            size.Y = ItemHeight + 4;
+            size.Y = ItemHeight;
+            size.X = MinimumWidth;
             return size;
         }
 
         protected override void SetBoundsCore(int x, int y, int width, int height, ControlBounds specifiedBounds)
         {
             base.SetBoundsCore(x, y, width, height, specifiedBounds);
-            float scale = Height / 11f;
-            int arrowWidth = (int)(DropDownArrowImage.Size.X * scale);
-            DropDownArrowBounds = new Rectangle(Width - arrowWidth, 0, arrowWidth, Height);
+
+            if (Height > 0 && Width > 0)
+            {
+                float scale = Height / 11f;
+                int arrowWidth = (int)(DropDownArrowImage.Size.X * scale);
+                DropDownArrowBounds = new Rectangle(Width - arrowWidth, 0, arrowWidth, Height);
+            }
+            
         }
 
         protected virtual void OnSelectedIndexChanged(EventArgs e)
         {
             SelectedIndexChanged?.Invoke(this, e);
         }
+
+        #region Drawing
 
         protected override void OnDraw(SdvGraphics g)
         {
@@ -193,31 +219,74 @@ namespace Polymaker.SdvUI.Controls
             if (SelectedItem != null || !string.IsNullOrEmpty(NullValueText))
             {
                 var text = SelectedItem != null ? GetDisplayText(SelectedItem) : NullValueText;
-                g.DrawString(text, Font, ForeColor, new Rectangle(8, 0, Width - DropDownArrowBounds.Width - 8, Height), ContentAlignment.MiddleLeft);
+
+                g.DrawString(text, Font, ForeColor, 
+                    new Rectangle(Padding.Left, Padding.Top, 
+                    Width - DropDownArrowBounds.Width - Padding.Horizontal, 
+                    Height - Padding.Vertical), 
+                    ContentAlignment.MiddleLeft);
             }
 
             if (DroppedDown && DataSource != null)
             {
-                int currentY = Height;
-                int dropDownHeight = 8 + Math.Max(1, DataSource.Count) * ItemHeight;
-                g.DrawTextureBox(DropDownBgImage, new Rectangle(0, currentY, Width, dropDownHeight), 4f);
-                currentY += 4;
+                int currentY = 0;
+                int dropDownHeight = Math.Max(1, DataSource.Count) * ItemHeight;
+                int dropDownWidth = Width;
+
+                if (DropDownStyle == ComboBoxStyle.Windows)
+                    currentY = Height;
+                else
+                    dropDownWidth -= DropDownArrowBounds.Width;
+
+                g.DrawTextureBox(DropDownBgImage, new Rectangle(0, currentY, dropDownWidth, dropDownHeight), 4f);
 
                 for (int i = 0; i < DataSource.Count; i++)
                 {
-                    var itemBounds = new Rectangle(4, currentY, Width - 8, ItemHeight);
-                    var textBounds = new Rectangle(8, currentY, Width - 8, ItemHeight);
-
-                    if (i == SelectedIndex)
-                    {
-                        g.FillRect(Color.Wheat, itemBounds);
-                    }
-
-                    g.DrawString(GetDisplayText(DataSource[i]), Font, ForeColor, textBounds, ContentAlignment.MiddleLeft);
+                    var itemBounds = new Rectangle(0, currentY, dropDownWidth, ItemHeight);
+                    var args = new DrawItemArgs(g, i, DataSource[i], GetDisplayText(DataSource[i]), i == SelectedIndex, false, itemBounds);
+                    DrawItem(args);
                     currentY += ItemHeight;
                 }
+
             }
         }
+
+        public class DrawItemArgs
+        {
+            public SdvGraphics Graphics { get; }
+            public object Item { get; }
+            public int Index { get; }
+            public string Value { get; set; }
+            public bool IsSelected { get; }
+            public bool IsOver { get; }
+            public Rectangle ItemBounds { get; }
+
+            public DrawItemArgs(SdvGraphics graphics, int index, object item, string value, bool isSelected, bool isOver, Rectangle itemBounds)
+            {
+                Graphics = graphics;
+                Index = index;
+                Item = item;
+                Value = value;
+                IsSelected = isSelected;
+                IsOver = isOver;
+                ItemBounds = itemBounds;
+            }
+        }
+
+        protected virtual void DrawItem(DrawItemArgs dia)
+        {
+            if (dia.IsSelected)
+                dia.Graphics.FillRect(Color.Wheat, dia.ItemBounds);
+
+            var textBounds = dia.ItemBounds;
+            textBounds.X += Padding.Left;
+            textBounds.Y += Padding.Top;
+            textBounds.Width -= Padding.Horizontal;
+            textBounds.Height -= Padding.Vertical;
+            dia.Graphics.DrawString(dia.Value, Font, ForeColor, textBounds, ContentAlignment.MiddleLeft);
+        }
+
+        #endregion
 
         #region DataBinding Stuff
 
@@ -315,15 +384,37 @@ namespace Polymaker.SdvUI.Controls
 
         #endregion
 
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (DropDownStyle == ComboBoxStyle.Stardew && !DroppedDown && 
+                Enabled && e.LeftButton && DataSource != null)
+            {
+                DroppedDown = true;
+                Game1.playSound("shwip");
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            if (DropDownStyle == ComboBoxStyle.Stardew && DroppedDown &&
+                Enabled && e.LeftButton && DataSource != null)
+            {
+                DroppedDown = false;
+                Game1.playSound("drumkit6");
+            }
+        }
+
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
-            if (Enabled /*&& DropDownArrowBounds.Contains(CursorPosition)*/ && DataSource != null)
+            if (DropDownStyle == ComboBoxStyle.Windows && Enabled  && DataSource != null)
             {
                 if (!DroppedDown)
-                {
                     Game1.playSound("shwip");
-                }
+                else
+                    Game1.playSound("drumkit6");
                 DroppedDown = !DroppedDown;
             }
         }
@@ -355,5 +446,11 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
+    }
+
+    public enum ComboBoxStyle
+    {
+        Stardew,
+        Windows
     }
 }

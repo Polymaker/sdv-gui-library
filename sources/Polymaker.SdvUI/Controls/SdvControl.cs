@@ -365,7 +365,7 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        protected virtual Point GetPreferredSize()
+        public virtual Point GetPreferredSize()
         {
             return Point.Zero;
         }

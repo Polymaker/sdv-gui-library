@@ -20,5 +20,10 @@ namespace Polymaker.SdvUI.Controls
         {
 
         }
+
+        public void Hide()
+        {
+
+        }
     }
 }

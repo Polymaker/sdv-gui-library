@@ -67,7 +67,7 @@ namespace Polymaker.SdvUI.Controls
             CheckSound = "drumkit6";
         }
 
-        protected override Point GetPreferredSize()
+        public override Point GetPreferredSize()
         {
             var baseSize = base.GetPreferredSize();
 
