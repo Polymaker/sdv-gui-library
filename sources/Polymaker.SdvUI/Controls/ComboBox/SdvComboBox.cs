@@ -24,14 +24,8 @@ namespace Polymaker.SdvUI.Controls
         private int MinimumWidth;
         private string _DisplayMember;
         private string _ValueMember;
-        private ComboBoxStyle _DropDownStyle;
 
-
-        public ComboBoxStyle DropDownStyle
-        {
-            get { return _DropDownStyle; }
-            set { _DropDownStyle = value; }
-        }
+        public ComboBoxStyle DropDownStyle { get; set; }
 
         public IList DataSource
         {
@@ -146,9 +140,17 @@ namespace Polymaker.SdvUI.Controls
 
         public SdvComboBox()
         {
-            _DropDownStyle = ComboBoxStyle.Stardew;
+            DropDownStyle = ComboBoxStyle.Stardew;
+            
+
+            InitializeResources();
+
             Padding = new Padding(6, 8, 4, 2);
             Height = 44;
+        }
+
+        private static void InitializeResources()
+        {
             if (DropDownArrowImage == null && Game1.mouseCursors != null)
             {
                 DropDownArrowImage = new SdvImage(Game1.mouseCursors, new Rectangle(437, 450, 10, 11));
@@ -159,6 +161,7 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnInitialize()
         {
             base.OnInitialize();
+            
             CalculateItemHeight();
         }
 
@@ -166,14 +169,18 @@ namespace Polymaker.SdvUI.Controls
         {
             if (Font != null)
             {
-                var textSize = Font.MeasureString("Qwerty");
+                var textSize = Font.MeasureString("Qwerty123");
                 ItemHeight = (int)textSize.Y + Padding.Vertical;
 
                 textSize = Font.MeasureString("W");
+                MinimumWidth = (int)textSize.X + Padding.Horizontal;
 
-                float scale = ItemHeight / 11f;
-                int arrowWidth = (int)(DropDownArrowImage.Size.X * scale);
-                MinimumWidth = (int)textSize.X + Padding.Horizontal + arrowWidth;
+                if (DropDownArrowImage != null)
+                {
+                    float scale = ItemHeight / 11f;
+                    int arrowWidth = (int)(DropDownArrowImage.Size.X * scale);
+                    MinimumWidth += arrowWidth;
+                }
             }
         }
 
@@ -243,7 +250,7 @@ namespace Polymaker.SdvUI.Controls
                 for (int i = 0; i < DataSource.Count; i++)
                 {
                     var itemBounds = new Rectangle(0, currentY, dropDownWidth, ItemHeight);
-                    var args = new DrawItemArgs(g, i, DataSource[i], GetDisplayText(DataSource[i]), i == SelectedIndex, false, itemBounds);
+                    var args = new ComboBoxItemDrawArgs(g, i, DataSource[i], GetDisplayText(DataSource[i]), i == SelectedIndex, false, itemBounds);
                     DrawItem(args);
                     currentY += ItemHeight;
                 }
@@ -251,29 +258,7 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-        public class DrawItemArgs
-        {
-            public SdvGraphics Graphics { get; }
-            public object Item { get; }
-            public int Index { get; }
-            public string Value { get; set; }
-            public bool IsSelected { get; }
-            public bool IsOver { get; }
-            public Rectangle ItemBounds { get; }
-
-            public DrawItemArgs(SdvGraphics graphics, int index, object item, string value, bool isSelected, bool isOver, Rectangle itemBounds)
-            {
-                Graphics = graphics;
-                Index = index;
-                Item = item;
-                Value = value;
-                IsSelected = isSelected;
-                IsOver = isOver;
-                ItemBounds = itemBounds;
-            }
-        }
-
-        protected virtual void DrawItem(DrawItemArgs dia)
+        protected virtual void DrawItem(ComboBoxItemDrawArgs dia)
         {
             if (dia.IsSelected)
                 dia.Graphics.FillRect(Color.Wheat, dia.ItemBounds);
@@ -446,11 +431,5 @@ namespace Polymaker.SdvUI.Controls
             }
         }
 
-    }
-
-    public enum ComboBoxStyle
-    {
-        Stardew,
-        Windows
     }
 }

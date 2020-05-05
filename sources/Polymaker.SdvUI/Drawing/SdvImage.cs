@@ -46,6 +46,13 @@ namespace Polymaker.SdvUI
 
             return new SdvImage(imageTexture, imageSourceRect, scale);
         }
+
+        public static SdvImage GetStandardTileSheet(Texture2D tileSheet, int tilePosition, int width = -1, int height = -1)
+        {
+            Rectangle imageSourceRect = Game1.getSourceRectForStandardTileSheet(tileSheet, tilePosition, width, height);
+
+            return new SdvImage(tileSheet, imageSourceRect, 1f);
+        }
     }
 
     public static class SdvImages

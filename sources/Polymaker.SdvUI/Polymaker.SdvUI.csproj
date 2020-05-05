@@ -64,13 +64,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\IControl.cs" />
+    <Compile Include="API\ILabel.cs" />
+    <Compile Include="API\ISdvUI.cs" />
+    <Compile Include="Controls\ComboBox\ComboBoxDropDown.cs" />
+    <Compile Include="Controls\ComboBox\ComboBoxStyle.cs" />
+    <Compile Include="Controls\ComboBox\ComboBoxItemDrawArgs.cs" />
     <Compile Include="Controls\Events\SdvEvents.cs" />
     <Compile Include="Controls\Events\SdvWindowEventRouter.cs" />
     <Compile Include="Controls\Events\ValueChangingEventArgs.cs" />
     <Compile Include="Controls\GridControl\SdvGridControl.cs" />
     <Compile Include="Controls\IScrollableContainer.cs" />
+    <Compile Include="Controls\ListView\ListViewColumn.cs" />
+    <Compile Include="Controls\ListView\ListViewItem.cs" />
     <Compile Include="Controls\SdvCheckbox.cs" />
-    <Compile Include="Controls\SdvComboBox.cs" />
+    <Compile Include="Controls\ComboBox\SdvComboBox.cs" />
+    <Compile Include="Controls\ListView\SdvListView.cs" />
     <Compile Include="Controls\SdvPopupBase.cs" />
     <Compile Include="Drawing\ContentAlignment.cs" />
     <Compile Include="Drawing\ControlBounds.cs" />
@@ -78,6 +87,7 @@
     <Compile Include="Controls\ISdvUIComponent.cs" />
     <Compile Include="Controls\SdvButton.cs" />
     <Compile Include="Controls\SdvContainerControl.cs" />
+    <Compile Include="Drawing\HorizontalAlignment.cs" />
     <Compile Include="Drawing\SdvFont.cs" />
     <Compile Include="Controls\SdvGameMenuForm.cs" />
     <Compile Include="Controls\SdvScrollableControl.cs" />
@@ -99,6 +109,7 @@
     <Compile Include="Utilities\GameMenuHelper.cs" />
     <Compile Include="Utilities\GraphicClip.cs" />
     <Compile Include="Utilities\LayoutHelper.cs" />
+    <Compile Include="Utilities\OwnerCollectionBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

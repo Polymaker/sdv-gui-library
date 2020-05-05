@@ -112,6 +112,8 @@ namespace Polymaker.SdvUI.Controls
 
         public bool WheelScrollLarge { get; set; }
 
+        public bool DrawTrackBarShadow { get; set; }
+
         public string ButtonClickSound { get; set; }
 
         public string ScrollingSound { get; set; }
@@ -245,7 +247,7 @@ namespace Polymaker.SdvUI.Controls
         protected override void OnDraw(SdvGraphics g)
         {
             base.OnDraw(g);
-            g.DrawTextureBox(SdvImages.ScrollBarTrack, ScrollbarTrackBounds, Color.White, 4f, true);
+            g.DrawTextureBox(SdvImages.ScrollBarTrack, ScrollbarTrackBounds, Color.White, 4f, DrawTrackBarShadow);
 
             if (Orientation == Orientation.Vertical)
             {
